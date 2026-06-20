@@ -1,617 +1,516 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Auto-Audit Valeur Client</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Auto-Audit — claude 03</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',sans-serif;background:#eef2f7;min-height:100vh;color:#1a1a2e}
-/* HEADER */
-.hdr{background:linear-gradient(135deg,#1e3a5f,#2d5a8e);color:#fff;padding:22px 32px}
-.hdr h1{font-size:1.5rem;font-weight:700}
-.hdr p{font-size:.9rem;opacity:.8;margin-top:4px}
-/* PROGRESS */
-.pgbar{background:#f0f4f8;border-bottom:1px solid #dde3ec;padding:14px 32px 0;display:none}
-.pgsteps{display:flex;overflow-x:auto;padding-bottom:2px}
-.pstep{flex:1;min-width:70px;display:flex;flex-direction:column;align-items:center;cursor:pointer;position:relative}
-.pstep:not(:last-child)::after{content:'';position:absolute;top:14px;left:50%;width:100%;height:2px;background:#dde3ec;z-index:0}
-.pstep.done:not(:last-child)::after{background:#2d5a8e}
-.pcircle{width:28px;height:28px;border-radius:50%;background:#dde3ec;color:#5a6a7a;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;position:relative;z-index:1;border:2px solid #dde3ec;transition:all .2s}
-.pstep.active .pcircle{background:#1e3a5f;color:#fff;border-color:#1e3a5f;box-shadow:0 0 0 3px rgba(30,58,95,.2)}
-.pstep.done .pcircle{background:#2d5a8e;color:#fff;border-color:#2d5a8e}
-.plabel{font-size:.62rem;color:#5a6a7a;margin-top:4px;text-align:center;max-width:72px;padding-bottom:8px;line-height:1.2}
-.pstep.active .plabel{color:#1e3a5f;font-weight:600}
-/* MAIN */
-.main{max-width:820px;margin:28px auto;padding:0 16px 60px}
-/* CARD */
-.card{background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(30,58,95,.09);padding:32px;margin-bottom:20px;animation:fi .3s ease}
-@keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-/* INTRO */
-.intro-hero{background:linear-gradient(135deg,#1e3a5f,#2d5a8e);color:#fff;border-radius:12px;padding:36px;margin-bottom:20px}
-.intro-hero h2{font-size:1.4rem;margin-bottom:10px}
-.intro-hero p{opacity:.88;line-height:1.6;font-size:.93rem;margin-bottom:8px}
-.legend{display:flex;gap:16px;margin-top:18px;flex-wrap:wrap}
-.lbadge{padding:3px 10px;border-radius:20px;font-weight:700;font-size:.76rem}
-/* FORM */
-.frow{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-.fg{flex:1;min-width:160px}
-.fg label{font-size:.8rem;color:#5a6a7a;display:block;margin-bottom:4px}
-.fg input{width:100%;padding:9px 12px;border:1.5px solid #dde3ec;border-radius:8px;font-size:.9rem;font-family:inherit}
-.fg input:focus{outline:none;border-color:#2d5a8e}
-.req{color:#c62828}
-/* BLOC HEADER */
-.btitle{font-size:1.15rem;font-weight:700;color:#1e3a5f;margin-bottom:4px}
-.bsub{font-size:.88rem;color:#5a6a7a;font-style:italic;margin-bottom:22px}
-/* SECTION */
-.sec{margin-bottom:28px}
-.stitle{font-size:.95rem;font-weight:600;color:#2d5a8e;border-bottom:2px solid #eef2f7;padding-bottom:7px;margin-bottom:16px}
-/* QUESTION */
-.qblock{margin-bottom:20px}
-.qtxt{font-size:.95rem;font-weight:500;margin-bottom:10px;line-height:1.5}
-/* OPTIONS */
-.opts{display:flex;flex-direction:column;gap:8px}
-.opt{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border:2px solid #dde3ec;border-radius:9px;cursor:pointer;background:#f5f7fa;transition:all .15s;user-select:none}
-.opt:hover{border-color:#2d5a8e;background:#eef3fb}
-.opt.sg{border-color:#2e7d32;background:#e8f5e9}
-.opt.so{border-color:#e65100;background:#fff3e0}
-.opt.sr{border-color:#c62828;background:#ffebee}
-.odot{width:18px;height:18px;border-radius:50%;border:2px solid #bbb;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.opt.sg .odot{background:#2e7d32;border-color:#2e7d32}
-.opt.so .odot{background:#e65100;border-color:#e65100}
-.opt.sr .odot{background:#c62828;border-color:#c62828}
-.odot::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff;display:none}
-.opt.sg .odot::after,.opt.so .odot::after,.opt.sr .odot::after{display:block}
-.olbl{font-size:.88rem;line-height:1.4;flex:1}
-.osig{font-size:.75rem;font-weight:700;padding:2px 7px;border-radius:20px;flex-shrink:0}
-.osig.g{background:#e8f5e9;color:#2e7d32}
-.osig.o{background:#fff3e0;color:#e65100}
-.osig.r{background:#ffebee;color:#c62828}
-/* COMMENT */
-.clbl{font-size:.78rem;color:#5a6a7a;margin-top:8px;margin-bottom:3px}
-.ctxt{width:100%;padding:8px 12px;border:1.5px solid #dde3ec;border-radius:7px;font-size:.85rem;font-family:inherit;resize:vertical;min-height:52px}
-.ctxt:focus{outline:none;border-color:#2d5a8e}
-/* NAV */
-.nav{display:flex;justify-content:space-between;align-items:center;margin-top:20px}
-.btn{padding:11px 26px;border-radius:8px;font-size:.92rem;font-weight:600;cursor:pointer;border:none;transition:all .2s}
-.btn-p{background:#1e3a5f;color:#fff}.btn-p:hover{background:#2d5a8e;transform:translateY(-1px)}
-.btn-s{background:#e0e4ea;color:#5a6a7a}.btn-s:hover{color:#1a1a2e}
-.btn-a{background:#e8a020;color:#fff}.btn-a:hover{background:#d4901a;transform:translateY(-1px)}
-.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
-/* RESULTS */
-.rtitle{font-size:1.3rem;font-weight:700;color:#1e3a5f;text-align:center;margin-bottom:20px}
-.sglobal{display:flex;justify-content:center;gap:24px;margin-bottom:28px;flex-wrap:wrap}
-.sbox{text-align:center;padding:18px 24px;border-radius:10px;min-width:110px}
-.sbox.g{background:#e8f5e9}.sbox.o{background:#fff3e0}.sbox.r{background:#ffebee}
-.snum{font-size:2rem;font-weight:800}
-.sbox.g .snum{color:#2e7d32}.sbox.o .snum{color:#e65100}.sbox.r .snum{color:#c62828}
-.slbl{font-size:.78rem;color:#5a6a7a;margin-top:3px}
-.brow{margin-bottom:12px;padding:14px 18px;border-radius:9px;background:#f5f7fa;border-left:4px solid #dde3ec}
-.brow.good{border-left-color:#2e7d32}.brow.warn{border-left-color:#e65100}.brow.bad{border-left-color:#c62828}
-.brtitle{font-weight:600;font-size:.9rem;margin-bottom:7px}
-.bbar{display:flex;height:7px;border-radius:4px;overflow:hidden;gap:3px}
-.bseg{height:100%;border-radius:2px}
-/* WEBHOOK */
-.wh{margin-top:24px;padding:22px;background:#f5f7fa;border-radius:10px;border:1.5px solid #dde3ec}
-.wh h3{font-size:.95rem;font-weight:600;color:#1e3a5f;margin-bottom:10px}
-.wrow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
-.winput{flex:1;min-width:200px;padding:9px 13px;border:1.5px solid #dde3ec;border-radius:8px;font-size:.88rem;font-family:inherit}
-.winput:focus{outline:none;border-color:#2d5a8e}
-.wstatus{padding:9px 14px;border-radius:7px;font-size:.85rem;margin-top:8px;display:none}
-.wstatus.ok{background:#e8f5e9;color:#2e7d32;display:block}
-.wstatus.err{background:#ffebee;color:#c62828;display:block}
-.wstatus.ld{background:#e3f2fd;color:#1565c0;display:block}
-pre{background:#f0f4f8;padding:10px;border-radius:7px;font-size:.7rem;overflow:auto;max-height:160px;border:1px solid #dde3ec;margin-top:10px}
-@media(max-width:560px){.hdr{padding:16px}.card{padding:20px 16px}.plabel{display:none}.sglobal{gap:10px}.sbox{padding:12px 14px;min-width:90px}}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f7;min-height:100vh;padding:24px 16px}
+  .wrap{max-width:760px;margin:0 auto}
+  .card{background:#fff;border-radius:16px;padding:30px;margin-bottom:16px;box-shadow:0 2px 16px rgba(0,0,0,.07)}
+  h1{font-size:1.55rem;color:#1a2e4a;margin-bottom:4px}
+  h2{font-size:1.1rem;color:#1a2e4a;margin-bottom:14px}
+  .subtitle{color:#777;font-size:.9rem;margin-bottom:22px;line-height:1.5}
+  label{display:block;font-size:.82rem;color:#555;margin-top:14px;margin-bottom:3px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+  input,select{width:100%;padding:10px 13px;border:1px solid #d0d5dd;border-radius:9px;font-size:.95rem;outline:none;transition:border .2s;color:#222}
+  input:focus,select:focus{border-color:#1a2e4a}
+  .err{border:2px solid #c62828!important;background:#fff8f8}
+
+  /* Buttons */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 20px;border:none;border-radius:10px;font-size:.95rem;cursor:pointer;transition:all .18s;font-weight:600}
+  .btn-full{width:100%;margin-top:10px}
+  .btn-primary{background:#1a2e4a;color:#fff}
+  .btn-primary:hover{background:#14243c}
+  .btn-secondary{background:#eef1f7;color:#1a2e4a}
+  .btn-secondary:hover{background:#dde3f0}
+  .btn-ghost{background:#f5f5f5;color:#888}
+  .btn-ghost:hover{background:#ebebeb}
+  .btn-mail{background:#1a56db;color:#fff;width:100%;margin-top:12px;padding:14px 20px;font-size:1rem}
+  .btn-mail:hover{background:#1446b8}
+  .btn-mail:disabled{background:#9ab0e0;cursor:not-allowed}
+  .btn-row{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+
+  /* Phase pills */
+  .phase-strip{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .phase-pill{padding:5px 14px;border-radius:99px;font-size:.75rem;font-weight:700;letter-spacing:.4px;opacity:.3;transition:opacity .2s}
+  .phase-pill.active{opacity:1}
+  .pill-a{background:#e8f0fe;color:#1a56db}
+  .pill-b{background:#fef3c7;color:#b45309}
+  .pill-c{background:#d1fae5;color:#065f46}
+
+  /* Progress */
+  .prog-wrap{background:#e8ecf2;border-radius:99px;height:6px;margin-bottom:5px}
+  .prog-bar{height:6px;border-radius:99px;transition:width .4s}
+  .prog-bar-a{background:#1a56db}
+  .prog-bar-b{background:#b45309}
+  .prog-bar-c{background:#065f46}
+  .prog-label{font-size:.77rem;color:#aaa;margin-bottom:18px;display:flex;justify-content:space-between}
+
+  /* Block badge */
+  .block-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;font-size:.73rem;font-weight:700;margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
+  .badge-a{background:#e8f0fe;color:#1a56db}
+  .badge-b{background:#fef3c7;color:#b45309}
+  .badge-c{background:#d1fae5;color:#065f46}
+
+  /* Question text */
+  .q-text{font-size:1.05rem;color:#1a2e4a;font-weight:700;line-height:1.5;margin-bottom:20px}
+
+  /* Options — liste verticale, sans icônes */
+  .opts-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+  .opt{padding:14px 18px;border:2px solid #e0e5ee;border-radius:12px;cursor:pointer;font-size:.9rem;line-height:1.45;transition:all .15s;display:flex;align-items:flex-start;gap:12px;user-select:none;position:relative}
+  .opt:hover{border-color:#1a2e4a;background:#f5f7fc}
+  .opt-letter{flex-shrink:0;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;border:2px solid currentColor;margin-top:1px}
+  .opt-text{color:#444;flex:1}
+  .opt .check{display:none;position:absolute;top:10px;right:12px;font-size:.85rem;font-weight:800}
+
+  /* Surbrillance */
+  .opt.sel-g{border-color:#2e7d32;background:#e8f5e9}
+  .opt.sel-g .opt-letter{background:#2e7d32;color:#fff;border-color:#2e7d32}
+  .opt.sel-g .opt-text{color:#1b5e20;font-weight:600}
+  .opt.sel-g .check{display:block;color:#2e7d32}
+  .opt.sel-o{border-color:#e65100;background:#fff3e0}
+  .opt.sel-o .opt-letter{background:#e65100;color:#fff;border-color:#e65100}
+  .opt.sel-o .opt-text{color:#bf360c;font-weight:600}
+  .opt.sel-o .check{display:block;color:#e65100}
+  .opt.sel-r{border-color:#c62828;background:#ffebee}
+  .opt.sel-r .opt-letter{background:#c62828;color:#fff;border-color:#c62828}
+  .opt.sel-r .opt-text{color:#b71c1c;font-weight:600}
+  .opt.sel-r .check{display:block;color:#c62828}
+
+  /* Commentaire */
+  .comment-wrap{margin-top:4px}
+  .comment-label{font-size:.78rem;color:#999;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+  .comment-input{width:100%;padding:9px 12px;border:1px solid #e0e5ee;border-radius:9px;font-size:.88rem;color:#444;resize:vertical;min-height:60px;outline:none;font-family:inherit;transition:border .2s;background:#fafbfc}
+  .comment-input:focus{border-color:#1a2e4a;background:#fff}
+
+  /* Results */
+  .score-ring{width:130px;height:130px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 10px;border:8px solid}
+  .ring-h{border-color:#2e7d32;color:#2e7d32;background:#f1f8e9}
+  .ring-m{border-color:#e65100;color:#e65100;background:#fff3e0}
+  .ring-l{border-color:#c62828;color:#c62828;background:#ffebee}
+  .ring-num{font-size:2.2rem;font-weight:800;line-height:1}
+  .ring-lbl{font-size:.7rem;font-weight:700;margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+  .mention{text-align:center;font-weight:700;color:#555;margin-bottom:28px;font-size:.95rem}
+
+  .phase-section{margin-bottom:24px}
+  .phase-title{font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;padding:6px 14px;border-radius:99px;display:inline-block;margin-bottom:12px}
+  .pt-a{background:#e8f0fe;color:#1a56db}
+  .pt-b{background:#fef3c7;color:#b45309}
+  .pt-c{background:#d1fae5;color:#065f46}
+
+  .brow{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:.87rem}
+  .brow-name{width:145px;flex-shrink:0;color:#333;font-weight:600}
+  .brow-bar-bg{flex:1;background:#e8ecf2;border-radius:99px;height:10px}
+  .brow-bar{height:10px;border-radius:99px;transition:width .6s}
+  .brow-pct{width:36px;text-align:right;font-weight:700;font-size:.82rem}
+  .tag{display:inline-block;padding:1px 7px;border-radius:99px;font-size:.68rem;font-weight:700;margin-left:4px;vertical-align:middle}
+  .tag-g{background:#e8f5e9;color:#2e7d32}
+  .tag-o{background:#fff3e0;color:#e65100}
+  .tag-r{background:#ffebee;color:#c62828}
+
+  .legend-box{margin-top:18px;padding:13px 16px;background:#f7f8fa;border-radius:10px;font-size:.82rem;color:#666;line-height:1.9}
+  .version{text-align:right;font-size:.68rem;color:#ccc;margin-top:12px}
+  canvas{display:block;max-width:500px;margin:16px auto 0}
+  .chart-title{text-align:center;font-weight:700;color:#1a2e4a;margin-top:22px;font-size:.95rem}
+  .divider{border:none;border-top:1px solid #eee;margin:20px 0}
+
+  /* Toast notification */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:13px 24px;border-radius:12px;font-size:.9rem;font-weight:600;color:#fff;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+  .toast.show{opacity:1}
+  .toast-ok{background:#2e7d32}
+  .toast-err{background:#c62828}
+  .toast-info{background:#1a2e4a}
+
+  /* Spinner */
+  .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+  @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-
-<div class="hdr">
-  <h1>🔍 Auto-Audit Valeur Client</h1>
-  <p>Évaluez honnêtement ce que votre entreprise apporte réellement à ses clients</p>
-</div>
-
-<div class="pgbar" id="pgbar">
-  <div class="pgsteps" id="pgsteps"></div>
-</div>
-
-<div class="main" id="app"></div>
+<div class="wrap" id="app"></div>
+<div class="toast" id="toast"></div>
 
 <script>
-// ── DONNÉES ──────────────────────────────────────────────────
-// g=vert(bien) o=orange(moyen) r=rouge(problème)
-const B=[
-  {ic:"🎯",ti:"Clarté de l'offre",su:"Nos clients comprennent-ils ce qu'ils achètent chez nous ?",secs:[
-    {ti:"1.1 — Notre promesse est-elle lisible ?",qs:[
-      {id:"q11",tx:"Si un client devait expliquer en 30s ce que nous lui apportons, que dirait-il ?",os:[
-        {lb:"Il citerait un bénéfice concret : gain de temps sur tel process",sg:"g"},
-        {lb:"Il décrirait ce qu'on fait, pas ce que ça lui apporte",sg:"o"},
-        {lb:"Honnêtement, on ne sait pas ce qu'il dirait",sg:"r"}]},
-      {id:"q12",tx:"Avons-nous reformulé notre offre en bénéfices métier plutôt qu'en prestations ?",os:[
-        {lb:"Oui, notre pitch est centré sur les gains concrets pour le client",sg:"g"},
-        {lb:"On décrit nos méthodes et outils — pas toujours les résultats",sg:"o"},
-        {lb:"On présente nos compétences — c'est au client de faire le lien",sg:"r"}]}]},
-    {ti:"1.2 — Savons-nous ce que nos clients valorisent ?",qs:[
-      {id:"q13",tx:"Connaissons-nous les critères sur lesquels nos clients nous évaluent ?",os:[
-        {lb:"Oui, on leur pose la question régulièrement",sg:"g"},
-        {lb:"On suppose qu'ils valorisent qualité et délais — sans leur avoir demandé",sg:"o"},
-        {lb:"On pense bien faire — on n'a pas de retours négatifs",sg:"r"}]},
-      {id:"q14",tx:"Avons-nous déjà été surpris par un retour client inattendu ?",os:[
-        {lb:"Non, nos clients semblent satisfaits de ce qu'on livre",sg:"g"},
-        {lb:"On a eu des retours sur la forme plutôt que le fond",sg:"o"},
-        {lb:"Oui — on pensait avoir bien fait mais le client attendait autre chose",sg:"r"}]}]}]},
-  {ic:"⭐",ti:"Qualité des livrables",su:"Ce que nous produisons est-il à la hauteur de nos promesses ?",secs:[
-    {ti:"2.1 — Nos livrables sont-ils constants ?",qs:[
-      {id:"q21",tx:"La qualité de nos livrables est-elle homogène d'un client à l'autre ?",os:[
-        {lb:"Oui, on a des standards et modèles que tout le monde applique",sg:"g"},
-        {lb:"Ça dépend du collaborateur — c'est variable",sg:"o"},
-        {lb:"Chaque mission repart de zéro — pas de standard",sg:"r"}]},
-      {id:"q22",tx:"Avons-nous des checklists, modèles et protocoles de validation formalisés ?",os:[
-        {lb:"Oui, chaque livrable passe par une revue qualité avant envoi",sg:"g"},
-        {lb:"On a des modèles mais ils ne sont pas toujours utilisés",sg:"o"},
-        {lb:"Non, chacun fait à sa façon — on fait confiance à l'expérience",sg:"r"}]}]},
-    {ti:"2.2 — Tenons-nous nos engagements ?",qs:[
-      {id:"q23",tx:"Nos engagements de délai et périmètre sont-ils tenus sur la majorité des missions ?",os:[
-        {lb:"Oui, très peu de retards ou dépassements de périmètre",sg:"g"},
-        {lb:"On dépasse souvent le périmètre sans le facturer",sg:"o"},
-        {lb:"On sous-estime les délais — les clients s'y sont habitués",sg:"r"}]},
-      {id:"q24",tx:"Mesurons-nous objectivement la qualité de nos livrables ?",os:[
-        {lb:"Oui, on mesure les retours, reprises et réclamations",sg:"g"},
-        {lb:"On fait des bilans mais sans indicateurs formels",sg:"o"},
-        {lb:"Non — on sait si ça s'est bien passé ou pas, c'est tout",sg:"r"}]}]}]},
-  {ic:"📊",ti:"Impact chez les clients",su:"Nos clients sont-ils vraiment meilleurs après avoir travaillé avec nous ?",secs:[
-    {ti:"3.1 — Mesurons-nous les résultats créés ?",qs:[
-      {id:"q31",tx:"Savons-nous concrètement ce que nos clients ont gagné grâce à nous ?",os:[
-        {lb:"Oui, on suit des KPI avant/après et on documente les gains",sg:"g"},
-        {lb:"On sait que ça s'est bien passé mais sans chiffres",sg:"o"},
-        {lb:"Non — une fois la mission terminée, on passe à la suivante",sg:"r"}]},
-      {id:"q32",tx:"Serions-nous capables de construire une étude de cas chiffrée sur nos 3 dernières missions ?",os:[
-        {lb:"Oui, on a les données et retours clients pour le faire",sg:"g"},
-        {lb:"Partiellement — éléments qualitatifs mais peu de chiffres",sg:"o"},
-        {lb:"Non — ni les données ni l'habitude de formaliser ça",sg:"r"}]}]},
-    {ti:"3.2 — La valeur est-elle perçue au bon moment ?",qs:[
-      {id:"q33",tx:"Nos clients réalisent-ils la valeur pendant la mission ou seulement après ?",os:[
-        {lb:"Pendant — on génère des quick wins visibles dès les premières semaines",sg:"g"},
-        {lb:"Plutôt à la fin — la valeur se révèle une fois tout livré",sg:"o"},
-        {lb:"Parfois seulement des mois après notre départ",sg:"r"}]},
-      {id:"q34",tx:"Nos clients sont-ils autonomes après notre intervention ?",os:[
-        {lb:"Oui — on forme, on documente, on transfère les compétences",sg:"g"},
-        {lb:"Partiellement — ils ont besoin de nous pour maintenir",sg:"o"},
-        {lb:"Non — sans nous, les améliorations s'effacent",sg:"r"}]}]}]},
-  {ic:"🤝",ti:"Expérience client",su:"Comment nos clients vivent-ils le fait de travailler avec nous ?",secs:[
-    {ti:"4.1 — La collaboration est-elle fluide ?",qs:[
-      {id:"q41",tx:"Nos clients trouvent-ils facile de travailler avec nous au quotidien ?",os:[
-        {lb:"Oui — on est réactifs, clairs et on simplifie leur vie",sg:"g"},
-        {lb:"On est bons sur le fond mais parfois lourds sur la forme",sg:"o"},
-        {lb:"On ne s'est jamais vraiment posé la question",sg:"r"}]},
-      {id:"q42",tx:"Une solution excellente a-t-elle déjà été rejetée par les équipes du client ?",os:[
-        {lb:"Non — nos solutions sont toujours bien reçues et adoptées",sg:"g"},
-        {lb:"Partiellement — certains profils ont adopté, d'autres non",sg:"o"},
-        {lb:"Oui — on a livré quelque chose de très bien mais personne ne l'a utilisé",sg:"r"}]}]},
-    {ti:"4.2 — Gérons-nous bien les moments difficiles ?",qs:[
-      {id:"q43",tx:"Comment réagissons-nous quand quelque chose ne se passe pas comme prévu ?",os:[
-        {lb:"On alerte proactivement et on propose une solution avant que le client s'en rende compte",sg:"g"},
-        {lb:"On attend que le client soulève le problème pour réagir",sg:"o"},
-        {lb:"On minimise ou on cherche des explications externes",sg:"r"}]},
-      {id:"q44",tx:"Un client nous a-t-il reproché un manque de transparence sur une difficulté ?",os:[
-        {lb:"Non — on est reconnus pour notre transparence",sg:"g"},
-        {lb:"Oui, une fois — on en a tiré une leçon",sg:"o"},
-        {lb:"Oui, et ça a abîmé la relation durablement",sg:"r"}]}]}]},
-  {ic:"🥇",ti:"Différenciation",su:"Pourquoi nos clients nous choisissent-ils plutôt qu'un autre ?",secs:[
-    {ti:"5.1 — Connaissons-nous nos facteurs de choix ?",qs:[
-      {id:"q51",tx:"Connaissons-nous les vraies raisons pour lesquelles nos clients nous ont choisis ?",os:[
-        {lb:"Oui — on leur pose la question systématiquement lors de l'onboarding",sg:"g"},
-        {lb:"On suppose que c'est notre expertise ou notre prix",sg:"o"},
-        {lb:"Non — on ne sait pas vraiment",sg:"r"}]},
-      {id:"q52",tx:"Analysons-nous les affaires perdues pour comprendre ce qui nous a manqué ?",os:[
-        {lb:"Oui — debrief systématique sur chaque opportunité perdue",sg:"g"},
-        {lb:"Rarement — on passe à la suivante sans analyser",sg:"o"},
-        {lb:"Non — on attribue ça au prix ou à la concurrence sans creuser",sg:"r"}]}]},
-    {ti:"5.2 — Notre différenciation est-elle défendable ?",qs:[
-      {id:"q53",tx:"Si un client demandait 'pourquoi vous ?', aurions-nous une réponse claire ?",os:[
-        {lb:"Oui — méthode, spécialisation et résultats prouvés nous distinguent",sg:"g"},
-        {lb:"On dirait qu'on est plus proches, plus réactifs — difficile à prouver",sg:"o"},
-        {lb:"Honnêtement, on ressemble beaucoup à nos concurrents sur le papier",sg:"r"}]},
-      {id:"q54",tx:"Notre positionnement a-t-il évolué avec les changements de notre marché ?",os:[
-        {lb:"Oui, on le vérifie et l'actualise régulièrement",sg:"g"},
-        {lb:"On pense que oui, mais on n'a pas fait le point depuis un moment",sg:"o"},
-        {lb:"Notre marché a changé mais notre offre n'a pas vraiment évolué",sg:"r"}]}]}]},
-  {ic:"🔄",ti:"Fidélisation",su:"Nos clients reviennent-ils, et pour les bonnes raisons ?",secs:[
-    {ti:"6.1 — Renouvellement et recommandations",qs:[
-      {id:"q61",tx:"Quel est notre taux de renouvellement et combien viennent par recommandation ?",os:[
-        {lb:"+70% de renouvellement, moitié des nouveaux clients par recommandation",sg:"g"},
-        {lb:"On renouvelle mais peu de recommandations spontanées",sg:"o"},
-        {lb:"On a du mal à fidéliser — chaque mission est un nouveau départ",sg:"r"}]},
-      {id:"q62",tx:"Créons-nous les conditions d'une relation longue durée ?",os:[
-        {lb:"Oui — accompagnement continu avec revues régulières",sg:"g"},
-        {lb:"On propose du suivi mais peu de clients y souscrivent",sg:"o"},
-        {lb:"Non — missions ponctuelles et on attend qu'ils reviennent",sg:"r"}]}]},
-    {ti:"6.2 — Nos clients sont-ils ambassadeurs ?",qs:[
-      {id:"q63",tx:"Avons-nous des clients qui parlent de nous spontanément à leur réseau ?",os:[
-        {lb:"Oui — plusieurs nous ont apporté des contacts sans qu'on demande",sg:"g"},
-        {lb:"Clients satisfaits mais discrets — ils ne parlent pas de nous",sg:"o"},
-        {lb:"Non — et on n'a pas de démarche pour les y encourager",sg:"r"}]},
-      {id:"q64",tx:"Avons-nous demandé à nos clients satisfaits de témoigner ou recommander ?",os:[
-        {lb:"Oui — témoignages, cas clients et introductions actives",sg:"g"},
-        {lb:"On n'ose pas demander — peur d'abuser de la relation",sg:"o"},
-        {lb:"Non — pas de processus pour ça",sg:"r"}]}]}]},
-  {ic:"📈",ti:"Amélioration continue",su:"Progressons-nous vraiment dans ce que nous apportons à nos clients ?",secs:[
-    {ti:"7.1 — Apprenons-nous de chaque mission ?",qs:[
-      {id:"q71",tx:"Avons-nous un processus pour capitaliser sur ce qui a bien ou mal fonctionné ?",os:[
-        {lb:"Oui — bilan systématique intégré à notre base de connaissances",sg:"g"},
-        {lb:"On en parle en équipe mais sans formalisation",sg:"o"},
-        {lb:"Non — chaque mission repart de zéro",sg:"r"}]},
-      {id:"q72",tx:"Nos méthodes ont-elles évolué grâce aux retours de nos clients ?",os:[
-        {lb:"Oui — nos clients nous ont aidés à affiner notre approche",sg:"g"},
-        {lb:"Un peu, mais on reste sur nos fondamentaux sans les remettre en question",sg:"o"},
-        {lb:"Non — on applique notre méthode telle quelle",sg:"r"}]}]},
-    {ti:"7.2 — Anticipons-nous les besoins futurs ?",qs:[
-      {id:"q73",tx:"Savons-nous ce dont nos clients auront besoin dans 12-24 mois ?",os:[
-        {lb:"Oui — veille active et propositions proactives",sg:"g"},
-        {lb:"On répond à leurs demandes mais on n'anticipe pas vraiment",sg:"o"},
-        {lb:"Non — on attend qu'ils viennent nous voir",sg:"r"}]},
-      {id:"q74",tx:"Avons-nous perdu un client parce qu'un concurrent avait anticipé un besoin ?",os:[
-        {lb:"Non — on est généralement en avance sur les sujets",sg:"g"},
-        {lb:"Oui, une fois — ça nous a servi de leçon",sg:"o"},
-        {lb:"Oui, et ça arrive encore — on est souvent en réaction",sg:"r"}]}]}]}
+var app   = document.getElementById('app');
+var toast = document.getElementById('toast');
+var cur   = -1, ans = {}, comments = {}, hist = [], co = {};
+
+var WEBHOOK_URL = 'http://XXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+
+var sectors = [
+  "Agriculture, sylviculture et pêche","Industrie","Construction","Commerce",
+  "Transport et logistique","Hébergement et restauration","Information et communication",
+  "Activités financières et d'assurance","Activités immobilières",
+  "Activités spécialisées, scientifiques et techniques",
+  "Activités de services administratifs et de soutien","Administration publique",
+  "Enseignement","Santé humaine et action sociale",
+  "Arts, spectacles et activités récréatives","Autres activités de services"
 ];
 
-// ── ÉTAT ─────────────────────────────────────────────────────
-let cur=-1;           // -1=intro, 0..6=bloc, 7=résultats
-let ans={};           // { qid: {sg,lb,cm} }
-let co={n:'',c:'',e:'',s:''};  // infos entreprise
+var questions = [
+  {id:"1.1",phase:"A",block:"Stratégie",text:"Si un client devait expliquer en 30s ce que nous lui apportons, que dirait-il ?",g:"Il citerait un bénéfice concret et mesurable : gain de temps, réduction de coûts, résultat précis",o:"Il décrirait ce qu'on fait, pas ce que ça lui apporte réellement",r:"Honnêtement, on ne sait pas ce qu'il dirait"},
+  {id:"1.2",phase:"A",block:"Stratégie",text:"Notre offre est-elle formulée en bénéfices métier plutôt qu'en prestations ?",g:"Oui — notre pitch est centré sur les gains concrets et mesurables pour le client",o:"On décrit nos méthodes et outils, pas toujours les résultats obtenus",r:"On présente nos compétences — c'est au client de faire le lien avec sa valeur"},
+  {id:"1.3",phase:"A",block:"Stratégie",text:"Si un prospect demandait « pourquoi vous ? », aurions-nous une réponse claire et prouvable ?",g:"Oui — méthode, spécialisation et résultats prouvés nous distinguent clairement",o:"On dirait qu'on est plus proches ou réactifs — difficile à prouver objectivement",r:"Honnêtement, on ressemble beaucoup à nos concurrents sur le papier"},
+  {id:"1.4",phase:"A",block:"Stratégie",text:"Notre positionnement a-t-il évolué avec les changements de notre marché ces 12 derniers mois ?",g:"Oui — on le vérifie et l'actualise régulièrement en fonction du marché",o:"On pense que oui, mais on n'a pas fait le point depuis un moment",r:"Notre marché a changé mais notre offre n'a pas vraiment évolué"},
+  {id:"1.5",phase:"A",block:"Stratégie",text:"Analysons-nous les affaires perdues pour comprendre ce qui nous a manqué ?",g:"Oui — debrief systématique sur chaque opportunité perdue avec actions correctives",o:"Rarement — on passe à la suivante sans vraiment analyser",r:"Non — on attribue ça au prix ou à la concurrence sans creuser"},
+  {id:"2.1",phase:"B",block:"Pilotage",text:"Chaque collaborateur sait-il précisément ce qui est attendu de lui chaque semaine ?",g:"Oui — fiches de poste à jour, objectifs clairs et réunions de suivi régulières",o:"Globalement oui, mais certains rôles se chevauchent ou restent flous",r:"Non — chacun gère comme il peut, les priorités changent souvent sans concertation"},
+  {id:"2.2",phase:"B",block:"Pilotage",text:"Avons-nous une vision consolidée de la charge de travail réelle de chaque équipe ?",g:"Oui — tableau de bord de charge mis à jour et visible par les managers",o:"On a une idée approximative mais pas de suivi formalisé",r:"Non — on découvre les surcharges quand les délais dérapent"},
+  {id:"2.3",phase:"B",block:"Pilotage",text:"Disposons-nous d'indicateurs opérationnels suivis au moins une fois par semaine ?",g:"Oui — KPI clés affichés, commentés et actionnés chaque semaine",o:"On a des indicateurs mais ils sont regardés de façon irrégulière",r:"Non — on pilote à vue, sans tableau de bord structuré"},
+  {id:"2.4",phase:"B",block:"Pilotage",text:"Nos réunions de pilotage débouchent-elles sur des décisions et actions concrètes ?",g:"Oui — chaque réunion produit un CR avec actions, responsables et délais",o:"Parfois — les décisions sont prises mais le suivi est aléatoire",r:"Non — nos réunions sont souvent informatives sans réel suivi des actions"},
+  {id:"3.1",phase:"B",block:"Processus",text:"Nos processus critiques sont-ils documentés, accessibles à tous et réellement utilisés ?",g:"Oui — procédures écrites, à jour et consultées régulièrement par les équipes",o:"Partiellement — certains processus sont documentés, d'autres reposent sur la mémoire individuelle",r:"Non — le savoir-faire est dans les têtes, rien n'est formalisé"},
+  {id:"3.2",phase:"B",block:"Processus",text:"Quand un collaborateur est absent, son travail peut-il être repris sans perte de qualité ?",g:"Oui — les processus sont suffisamment documentés pour assurer la continuité",o:"Avec difficulté — il faut improviser ou attendre son retour pour certaines tâches",r:"Non — certaines personnes sont irremplaçables à court terme"},
+  {id:"3.3",phase:"B",block:"Processus",text:"La qualité de nos livrables est-elle homogène d'un client à l'autre, quel que soit le collaborateur ?",g:"Oui — standards, modèles et checklists que tout le monde applique",o:"Ça dépend du collaborateur — c'est variable selon les personnes",r:"Chaque mission repart de zéro — pas de standard partagé"},
+  {id:"3.4",phase:"B",block:"Processus",text:"Avons-nous des points de contrôle qualité intégrés avant chaque livraison ?",g:"Oui — checklists de validation systématiques, chaque livrable passe par une revue avant envoi",o:"On vérifie, mais de façon informelle et variable selon les personnes",r:"Non — les erreurs sont découvertes par le client ou après coup"},
+  {id:"3.5",phase:"B",block:"Processus",text:"Mesurons-nous notre taux d'erreurs, de reprises ou de réclamations clients ?",g:"Oui — indicateur suivi et utilisé activement pour améliorer nos processus",o:"On note les problèmes au fil de l'eau sans consolidation ni analyse",r:"Non — on n'a pas de visibilité sur notre taux de défauts"},
+  {id:"4.1",phase:"B",block:"RH",text:"Notre processus de recrutement nous permet-il d'attirer les bons profils en temps voulu ?",g:"Oui — processus structuré, délais maîtrisés et taux de rétention élevé",o:"On recrute mais avec des délais longs et des résultats inégaux",r:"Non — on est souvent en sous-effectif ou on fait des erreurs de recrutement"},
+  {id:"4.2",phase:"B",block:"RH",text:"Un nouveau collaborateur est-il pleinement opérationnel dans le délai prévu ?",g:"Oui — parcours d'intégration structuré avec jalons clairs et suivi",o:"Partiellement — l'intégration dépend beaucoup du manager ou de l'équipe",r:"Non — les nouvelles recrues se débrouillent souvent seules"},
+  {id:"4.3",phase:"B",block:"RH",text:"Avons-nous une cartographie des compétences clés et des plans de développement associés ?",g:"Oui — matrice de compétences à jour et entretiens de développement réguliers",o:"On fait des entretiens annuels mais sans plan de développement structuré",r:"Non — on n'a pas de vision claire des compétences disponibles ni manquantes"},
+  {id:"4.4",phase:"B",block:"RH",text:"Nos collaborateurs comprennent-ils le lien entre leur travail quotidien et les objectifs de l'entreprise ?",g:"Oui — objectifs individuels alignés sur la stratégie, communiqués et compris",o:"Partiellement — certains voient le lien, d'autres travaillent en silo",r:"Non — la stratégie reste floue pour la majorité des équipes"},
+  {id:"5.1",phase:"B",block:"Outils",text:"Nos outils couvrent-ils l'ensemble de nos besoins sans doublon ni lacune majeure ?",g:"Oui — stack cohérent, bien intégré et adopté par toutes les équipes",o:"On a les outils mais avec des doublons, des silos de données ou des usages incohérents",r:"Non — on compense les manques par des fichiers Excel et des échanges informels"},
+  {id:"5.2",phase:"B",block:"Outils",text:"Le temps passé à saisir, retraiter ou chercher de l'information est-il maîtrisé ?",g:"Oui — les données circulent automatiquement entre les outils, peu de ressaisie",o:"On perd du temps en ressaisies et en réconciliation de données entre outils",r:"La gestion de l'information est un vrai problème qui ralentit nos équipes quotidiennement"},
+  {id:"5.3",phase:"B",block:"Outils",text:"Nos collaborateurs utilisent-ils nos outils à leur plein potentiel ?",g:"Oui — formations régulières, référents internes et taux d'adoption élevé",o:"Usage basique — on n'exploite qu'une fraction des fonctionnalités disponibles",r:"Non — certains évitent les outils ou développent des contournements personnels"},
+  {id:"5.4",phase:"B",block:"Outils",text:"Avons-nous un plan clair pour faire évoluer notre SI dans les 12 prochains mois ?",g:"Oui — roadmap SI définie, budgétée et pilotée",o:"On a des projets en tête mais sans planning ni budget formalisés",r:"Non — on réagit aux urgences sans vision d'ensemble"},
+  {id:"6.1",phase:"B",block:"Fournisseurs",text:"Avons-nous des critères formels pour sélectionner et évaluer nos fournisseurs stratégiques ?",g:"Oui — grille d'évaluation, appels d'offres structurés et revues annuelles",o:"On choisit sur la base de la confiance et du prix sans critères formalisés",r:"Non — on travaille souvent avec les mêmes sans jamais les remettre en question"},
+  {id:"6.2",phase:"B",block:"Fournisseurs",text:"Nos contrats fournisseurs incluent-ils des SLA et des pénalités en cas de défaillance ?",g:"Oui — SLA définis, suivis et actionnés en cas de non-respect",o:"Certains contrats l'incluent, d'autres sont des accords informels",r:"Non — nos relations fournisseurs reposent sur la confiance sans cadre contractuel solide"},
+  {id:"6.3",phase:"B",block:"Fournisseurs",text:"Avons-nous identifié nos fournisseurs critiques et des alternatives en cas de défaillance ?",g:"Oui — cartographie des risques fournisseurs et plan de continuité documenté",o:"On connaît nos dépendances mais sans plan B formalisé",r:"Non — certains fournisseurs sont irremplaçables à court terme sans que ça nous inquiète"},
+  {id:"6.4",phase:"B",block:"Fournisseurs",text:"Nos partenaires contribuent-ils activement à notre performance ou sont-ils de simples prestataires ?",g:"Partenaires stratégiques impliqués, force de proposition et créateurs de valeur",o:"Relations correctes mais transactionnelles — peu d'initiative de leur part",r:"On subit nos prestataires — qualité inégale et peu de marge de manœuvre"},
+  {id:"7.1",phase:"B",block:"Finance",text:"Connaissons-nous notre marge réelle par produit, service ou client ?",g:"Oui — comptabilité analytique à jour et marges suivies par activité",o:"On a une idée globale mais pas de décomposition fine par activité",r:"Non — on connaît notre résultat global mais pas nos marges unitaires"},
+  {id:"7.2",phase:"B",block:"Finance",text:"Disposons-nous d'une prévision de trésorerie à 3 mois minimum, mise à jour régulièrement ?",g:"Oui — prévision glissante à jour, revue chaque semaine ou quinzaine",o:"On fait des prévisions ponctuelles mais sans mise à jour systématique",r:"Non — on découvre les tensions de trésorerie quand elles arrivent"},
+  {id:"7.3",phase:"B",block:"Finance",text:"Avons-nous challengé nos principaux postes de coûts dans les 12 derniers mois ?",g:"Oui — revue annuelle des coûts avec actions d'optimisation documentées",o:"On surveille les coûts globaux sans analyse détaillée poste par poste",r:"Non — les coûts sont subis, on n'a pas de démarche d'optimisation active"},
+  {id:"7.4",phase:"B",block:"Finance",text:"Notre processus de facturation et de recouvrement est-il fluide et sans perte de revenus ?",g:"Oui — facturation dans les délais, relances automatisées, DSO maîtrisé",o:"Des oublis ou retards de facturation surviennent parfois",r:"Non — on perd régulièrement des revenus par oubli de facturation ou mauvais suivi"},
+  {id:"8.1",phase:"C",block:"Expérience",text:"Nos clients trouvent-ils facile de travailler avec nous au quotidien ?",g:"Oui — on est réactifs, clairs et on simplifie leur vie",o:"On est bons sur le fond mais parfois lourds sur la forme",r:"On ne s'est jamais vraiment posé la question"},
+  {id:"8.2",phase:"C",block:"Expérience",text:"Comment réagissons-nous quand quelque chose ne se passe pas comme prévu ?",g:"On alerte proactivement et on propose une solution avant que le client s'en rende compte",o:"On attend que le client soulève le problème pour réagir",r:"On minimise ou on cherche des explications externes"},
+  {id:"8.3",phase:"C",block:"Expérience",text:"Nos clients réalisent-ils la valeur pendant la mission ou seulement après ?",g:"Pendant — on génère des quick wins visibles dès les premières semaines",o:"Plutôt à la fin — la valeur se révèle une fois tout livré",r:"Parfois seulement des mois après notre départ"},
+  {id:"8.4",phase:"C",block:"Expérience",text:"Savons-nous concrètement ce que nos clients ont gagné grâce à nous (KPI avant/après) ?",g:"Oui — on suit des indicateurs avant/après et on documente les gains",o:"On sait que ça s'est bien passé mais sans chiffres ni mesure formelle",r:"Non — une fois la mission terminée, on passe à la suivante"},
+  {id:"8.5",phase:"C",block:"Expérience",text:"Nos clients sont-ils autonomes et capables de maintenir les résultats après notre intervention ?",g:"Oui — on forme, on documente et on transfère les compétences systématiquement",o:"Partiellement — ils ont besoin de nous pour maintenir certains éléments",r:"Non — sans nous, les améliorations s'effacent progressivement"},
+  {id:"8.6",phase:"C",block:"Expérience",text:"Serions-nous capables de construire une étude de cas chiffrée sur nos 3 dernières missions ?",g:"Oui — on a les données et retours clients pour le faire",o:"Partiellement — éléments qualitatifs mais peu de chiffres",r:"Non — ni les données ni l'habitude de formaliser ça"},
+  {id:"9.1",phase:"C",block:"Fidélisation",text:"Quel est notre taux de renouvellement et combien de clients viennent par recommandation ?",g:"+70% de renouvellement, moitié des nouveaux clients par recommandation",o:"On renouvelle mais peu de recommandations spontanées",r:"On a du mal à fidéliser — chaque mission est un nouveau départ"},
+  {id:"9.2",phase:"C",block:"Fidélisation",text:"Créons-nous activement les conditions d'une relation longue durée avec nos clients ?",g:"Oui — accompagnement continu, revues régulières et propositions proactives",o:"On propose du suivi mais peu de clients y souscrivent",r:"Non — missions ponctuelles et on attend qu'ils reviennent"},
+  {id:"9.3",phase:"C",block:"Fidélisation",text:"Avons-nous des clients qui parlent de nous spontanément à leur réseau ?",g:"Oui — plusieurs nous ont apporté des contacts sans qu'on demande",o:"Clients satisfaits mais discrets — ils ne parlent pas de nous",r:"Non — et on n'a pas de démarche pour les y encourager"},
+  {id:"9.4",phase:"C",block:"Fidélisation",text:"Avons-nous un processus actif pour collecter des témoignages et activer les recommandations ?",g:"Oui — témoignages, cas clients et introductions actives font partie de notre routine",o:"On n'ose pas demander — peur d'abuser de la relation",r:"Non — pas de processus pour ça"},
+  {id:"10.1",phase:"C",block:"Amélioration",text:"Avons-nous un processus pour remonter, prioriser et résoudre les problèmes récurrents ?",g:"Oui — système de remontée d'anomalies, priorisation et suivi de résolution",o:"Les problèmes remontent de façon informelle et sont traités au cas par cas",r:"Non — les mêmes problèmes reviennent sans qu'on s'attaque aux causes racines"},
+  {id:"10.2",phase:"C",block:"Amélioration",text:"Avons-nous un processus pour capitaliser sur ce qui a bien ou mal fonctionné à chaque mission ?",g:"Oui — bilan systématique intégré à notre base de connaissances partagée",o:"On en parle en équipe mais sans formalisation ni traçabilité",r:"Non — chaque mission repart de zéro sans capitalisation"},
+  {id:"10.3",phase:"C",block:"Amélioration",text:"Nos méthodes ont-elles évolué grâce aux retours de nos clients et de nos équipes ?",g:"Oui — nos clients et collaborateurs ont activement contribué à affiner notre approche",o:"Un peu, mais on reste sur nos fondamentaux sans les remettre en question",r:"Non — on applique notre méthode telle quelle sans la questionner"},
+  {id:"10.4",phase:"C",block:"Amélioration",text:"Mesurons-nous l'impact réel de nos actions d'amélioration après leur mise en œuvre ?",g:"Oui — indicateurs avant/après et bilan systématique de chaque chantier",o:"On mesure parfois mais sans méthode rigoureuse ni comparaison avant/après",r:"Non — on lance des améliorations sans savoir si elles ont vraiment fonctionné"},
+  {id:"10.5",phase:"C",block:"Amélioration",text:"Savons-nous ce dont nos clients et notre marché auront besoin dans 12 à 24 mois ?",g:"Oui — veille active, échanges réguliers avec les clients et propositions proactives",o:"On répond à leurs demandes mais on n'anticipe pas vraiment",r:"Non — on attend qu'ils viennent nous voir ou qu'un concurrent nous dépasse"}
+];
 
-// ── DÉMARRAGE ────────────────────────────────────────────────
-render();
+var TOTAL = questions.length;
 
-// ── RENDER PRINCIPAL ─────────────────────────────────────────
-// Aiguille vers la bonne vue selon cur
+var phaseInfo = {
+  A:{label:"Phase A — Stratégie",cls:"pill-a",barCls:"prog-bar-a",badgeCls:"badge-a",ptCls:"pt-a",icon:"🎯"},
+  B:{label:"Phase B — Organisation",cls:"pill-b",barCls:"prog-bar-b",badgeCls:"badge-b",ptCls:"pt-b",icon:"⚙️"},
+  C:{label:"Phase C — Client",cls:"pill-c",barCls:"prog-bar-c",badgeCls:"badge-c",ptCls:"pt-c",icon:"⭐"}
+};
+
+/* ── Toast ── */
+var toastTimer;
+function showToast(msg, type){
+  toast.textContent = msg;
+  toast.className = 'toast toast-'+(type||'info')+' show';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toast.className='toast'; }, 3500);
+}
+
+/* ── Sauvegarde commentaire courant ── */
+function saveComment(){
+  var el = document.getElementById('comment-field');
+  if(el) comments[cur] = el.value;
+}
+
+/* ── RENDER ── */
 function render(){
-  const app=document.getElementById('app');
-  const pb=document.getElementById('pgbar');
-  if(cur===-1){
-    pb.style.display='none';
-    app.innerHTML=introHTML();
-  } else if(cur>=B.length){
-    pb.style.display='block';
-    renderPG();
-    app.innerHTML=resultsHTML();
-  } else {
-    pb.style.display='block';
-    renderPG();
-    app.innerHTML=blocHTML(B[cur]);
-  }
-  window.scrollTo({top:0,behavior:'smooth'});
+  if(cur===-1)        showIntro();
+  else if(cur>=TOTAL) showResults();
+  else                showQuiz();
 }
 
-// ── PAGE INTRO ───────────────────────────────────────────────
-function introHTML(){
-  return `
-  <div class="intro-hero">
-    <h2>🔍 Auto-Audit Valeur Client</h2>
-    <p>Évaluez honnêtement ce que votre entreprise apporte réellement à ses clients — depuis leur expérience, pas depuis vos process internes.</p>
-    <p><strong>7 blocs · 28 questions · 15 à 20 min</strong></p>
-    <div class="legend">
-      <div style="display:flex;align-items:center;gap:8px;font-size:.85rem">
-        <span class="lbadge" style="background:#e8f5e9;color:#2e7d32">✅ Vert</span> Pratique maîtrisée
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;font-size:.85rem">
-        <span class="lbadge" style="background:#fff3e0;color:#e65100">⚠️ Orange</span> À structurer
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;font-size:.85rem">
-        <span class="lbadge" style="background:#ffebee;color:#c62828">❌ Rouge</span> Priorité critique
-      </div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="btitle">🏢 Votre entreprise</div>
-    <div class="bsub">Ces informations seront incluses dans le rapport envoyé</div>
-    <div class="frow">
-      <div class="fg"><label>Entreprise <span class="req">*</span></label>
-        <input id="fn" placeholder="Acme SAS" value="${co.n}" oninput="co.n=this.value"/></div>
-      <div class="fg"><label>Secteur</label>
-        <input id="fs" placeholder="Industrie, Services B2B…" value="${co.s}" oninput="co.s=this.value"/></div>
-    </div>
-    <div class="frow">
-      <div class="fg"><label>Répondant <span class="req">*</span></label>
-        <input id="fc" placeholder="Prénom Nom" value="${co.c}" oninput="co.c=this.value"/></div>
-      <div class="fg"><label>Email <span class="req">*</span></label>
-        <input id="fe" type="email" placeholder="contact@entreprise.com" value="${co.e}" oninput="co.e=this.value"/></div>
-    </div>
-  </div>
-  <div class="nav">
-    <div></div>
-    <button class="btn btn-a" style="font-size:1rem;padding:13px 34px" onclick="startAudit()">
-      Démarrer l'audit →
-    </button>
-  </div>`;
+/* ── INTRO ── */
+function showIntro(){
+  var opts = sectors.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('');
+  app.innerHTML =
+    '<div class="card">'
+    +'<h1>🔍 Auto-Audit Entreprise</h1>'
+    +'<p class="subtitle">Évaluez la maturité de votre organisation en <strong>45 questions</strong> réparties sur <strong>3 phases</strong> et <strong>10 blocs</strong>.</p>'
+    +'<div class="phase-strip">'
+    +'<span class="phase-pill pill-a active">🎯 Phase A — Stratégie (5 q.)</span>'
+    +'<span class="phase-pill pill-b active">⚙️ Phase B — Organisation (24 q.)</span>'
+    +'<span class="phase-pill pill-c active">⭐ Phase C — Client (16 q.)</span>'
+    +'</div>'
+    +'<label>Nom de l\'entreprise *</label><input id="fn" placeholder="Ex : Acme SAS">'
+    +'<label>Secteur d\'activité *</label>'
+    +'<select id="fsa"><option value="">— Sélectionner —</option>'+opts+'</select>'
+    +'<label>Taille de l\'entreprise *</label>'
+    +'<select id="fsz"><option value="">— Sélectionner —</option>'
+    +'<option>1 à 9 personnes</option><option>10 à 49 personnes</option>'
+    +'<option>50 à 250 personnes</option><option>251 à 1000 personnes</option>'
+    +'<option>Plus de 1000 personnes</option></select>'
+    +'<label>Email *</label><input id="fe" type="email" placeholder="contact@entreprise.fr">'
+    +'<label>Téléphone</label><input id="fph" type="tel" placeholder="+33 6 00 00 00 00">'
+    +'<button class="btn btn-primary btn-full" onclick="startAudit()">Démarrer l\'audit →</button>'
+    +'<div class="version">Auto-Audit — claude 03</div>'
+    +'</div>';
 }
 
-// ── BARRE DE PROGRESSION ─────────────────────────────────────
-// Génère les cercles numérotés en haut de page
-function renderPG(){
-  const el=document.getElementById('pgsteps');
-  let h=B.map((b,i)=>`
-    <div class="pstep ${i<cur?'done':''} ${i===cur?'active':''}" onclick="goTo(${i})" title="${b.ti}">
-      <div class="pcircle">${i<cur?'✓':i+1}</div>
-      <div class="plabel">${b.ic} ${b.ti.split(' ').slice(0,2).join(' ')}</div>
-    </div>`).join('');
-  h+=`<div class="pstep ${cur>=B.length?'active':''}">
-    <div class="pcircle" style="${cur>=B.length?'background:#e8a020;color:#fff;border-color:#e8a020':''}">📋</div>
-    <div class="plabel">Résultats</div>
-  </div>`;
-  el.innerHTML=h;
-}
-
-// ── PAGE BLOC ────────────────────────────────────────────────
-// Construit le HTML d'un bloc de questions
-function blocHTML(b){
-  const allQ=b.secs.flatMap(s=>s.qs);
-  const done=allQ.filter(q=>ans[q.id]).length;
-  const pct=Math.round((done/allQ.length)*100);
-
-  let h=`<div class="card">
-    <div class="btitle">${b.ic} Bloc ${cur+1} — ${b.ti}</div>
-    <div class="bsub">${b.su}</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <span style="font-size:.83rem;color:#5a6a7a">${done}/${allQ.length} répondues</span>
-      <div style="width:140px;height:5px;background:#dde3ec;border-radius:3px;overflow:hidden">
-        <div id="bpb" style="width:${pct}%;height:100%;background:#1e3a5f;border-radius:3px;transition:width .3s"></div>
-      </div>
-    </div>`;
-
-  // Sections et questions
-  b.secs.forEach(s=>{
-    h+=`<div class="sec"><div class="stitle">${s.ti}</div>`;
-    s.qs.forEach(q=>{ h+=qHTML(q); });
-    h+=`</div>`;
-  });
-
-  // Boutons nav
-  h+=`<div class="nav">
-    <button class="btn btn-s" onclick="prev()" ${cur===0?'disabled':''}>← Précédent</button>
-    <button class="btn btn-p" onclick="next()">${cur===B.length-1?'Voir les résultats 📋':'Suivant →'}</button>
-  </div></div>`;
-  return h;
-}
-
-// ── HTML D'UNE QUESTION ──────────────────────────────────────
-// Génère les options cliquables + textarea commentaire
-function qHTML(q){
-  const a=ans[q.id];
-  const opts=q.os.map((o,i)=>{
-    const sel=a&&a.lb===o.lb;
-    const sc=sel?`s${o.sg}`:'';
-    const em=o.sg==='g'?'✅':o.sg==='o'?'⚠️':'❌';
-    return `<div class="opt ${sc}" onclick="pick('${q.id}','${o.sg}',${i})">
-      <div class="odot"></div>
-      <span class="olbl">${o.lb}</span>
-      <span class="osig ${o.sg}">${em}</span>
-    </div>`;
-  }).join('');
-  return `<div class="qblock" id="qw_${q.id}">
-    <div class="qtxt">${q.tx}</div>
-    <div class="opts">${opts}</div>
-    <div class="clbl">💬 Commentaire (optionnel)</div>
-    <textarea class="ctxt" placeholder="Précisez, donnez un exemple…"
-      onchange="saveCmt('${q.id}',this.value)">${a?a.cm||'':''}</textarea>
-  </div>`;
-}
-
-// ── SÉLECTION D'UNE RÉPONSE ──────────────────────────────────
-// Enregistre la réponse et re-rend uniquement le bloc question
-function pick(qid,sg,idx){
-  // Trouve le libellé de l'option choisie
-  let lb='';
-  B[cur].secs.forEach(s=>s.qs.forEach(q=>{
-    if(q.id===qid) lb=q.os[idx].lb;
-  }));
-  const cm=ans[qid]?ans[qid].cm||'':'';
-  ans[qid]={sg,lb,cm};
-
-  // Re-rend uniquement le bloc question (pas toute la page)
-  const wrap=document.getElementById('qw_'+qid);
-  if(wrap){
-    const tmp=document.createElement('div');
-    let q2=null;
-    B[cur].secs.forEach(s=>s.qs.forEach(q=>{if(q.id===qid)q2=q;}));
-    tmp.innerHTML=qHTML(q2);
-    wrap.replaceWith(tmp.firstElementChild);
-  }
-
-  // Met à jour la mini barre de progression du bloc
-  const allQ=B[cur].secs.flatMap(s=>s.qs);
-  const done=allQ.filter(q=>ans[q.id]).length;
-  const pct=Math.round((done/allQ.length)*100);
-  const bpb=document.getElementById('bpb');
-  if(bpb) bpb.style.width=pct+'%';
-  const lbl=document.querySelector('.card span[style*="color:#5a6a7a"]');
-  if(lbl) lbl.textContent=`${done}/${allQ.length} répondues`;
-}
-
-// ── SAUVEGARDE COMMENTAIRE ───────────────────────────────────
-function saveCmt(qid,val){
-  if(!ans[qid]) ans[qid]={sg:null,lb:'',cm:val};
-  else ans[qid].cm=val;
-}
-
-// ── NAVIGATION ───────────────────────────────────────────────
 function startAudit(){
-  // Récupère les valeurs des champs (oninput peut avoir raté si copié-collé)
-  co.n=document.getElementById('fn').value;
-  co.c=document.getElementById('fc').value;
-  co.e=document.getElementById('fe').value;
-  co.s=document.getElementById('fs').value;
-  if(!co.n||!co.c||!co.e){
-    alert('Merci de renseigner l\'entreprise, le répondant et l\'email.');
-    return;
+  var fn=document.getElementById('fn'), fsa=document.getElementById('fsa'),
+      fsz=document.getElementById('fsz'), fe=document.getElementById('fe'),
+      fph=document.getElementById('fph');
+  [fn,fsa,fsz,fe,fph].forEach(function(el){ el.classList.remove('err'); });
+  var ok=true;
+  if(!fn.value.trim())  { fn.classList.add('err');  ok=false; }
+  if(!fsa.value)        { fsa.classList.add('err'); ok=false; }
+  if(!fsz.value)        { fsz.classList.add('err'); ok=false; }
+  if(!fe.value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fe.value)) { fe.classList.add('err'); ok=false; }
+  if(fph.value && !/^[0-9 +\-().]{7,20}$/.test(fph.value)) { fph.classList.add('err'); ok=false; }
+  if(!ok) return;
+  co={n:fn.value.trim(),sa:fsa.value,sz:fsz.value,e:fe.value.trim(),p:fph.value.trim()};
+  cur=0; ans={}; comments={}; hist=[];
+  render();
+}
+
+/* ── QUIZ ── */
+function showQuiz(){
+  var q=questions[cur], pi=phaseInfo[q.phase];
+  var pct=Math.round(cur/TOTAL*100);
+  var prev=ans[cur];
+  var clG=prev==='g'?' sel-g':'', clO=prev==='o'?' sel-o':'', clR=prev==='r'?' sel-r':'';
+  var hasAns=prev!==undefined, isLast=cur===TOTAL-1;
+  var savedComment = comments[cur]||'';
+
+  var nextBtn = hasAns
+    ? (isLast
+        ? '<button class="btn btn-primary" onclick="saveComment();goResults()">Voir les résultats ✓</button>'
+        : '<button class="btn btn-primary" id="btn-next" onclick="saveComment();goNext()">Suivant →</button>')
+    : '';
+
+  app.innerHTML =
+    '<div class="card">'
+    +'<div class="phase-strip">'
+    +'<span class="phase-pill '+phaseInfo.A.cls+(q.phase==='A'?' active':'')+'">'+'🎯 Phase A</span>'
+    +'<span class="phase-pill '+phaseInfo.B.cls+(q.phase==='B'?' active':'')+'">'+'⚙️ Phase B</span>'
+    +'<span class="phase-pill '+phaseInfo.C.cls+(q.phase==='C'?' active':'')+'">'+'⭐ Phase C</span>'
+    +'</div>'
+    +'<div class="prog-wrap"><div class="prog-bar '+pi.barCls+'" style="width:'+pct+'%"></div></div>'
+    +'<div class="prog-label"><span>Question '+(cur+1)+' / '+TOTAL+' &nbsp;·&nbsp; '+q.block+'</span><span>'+pct+'% complété</span></div>'
+    +'<span class="block-badge '+pi.badgeCls+'">'+pi.icon+' '+q.block+' — '+q.id+'</span>'
+    +'<p class="q-text">'+q.text+'</p>'
+    +'<div class="opts-list">'
+    +'<div class="opt'+clG+'" id="opt-g" onclick="pickAns(\'g\')">'
+    +'<span class="opt-letter" style="color:#2e7d32">A</span>'
+    +'<span class="opt-text">'+q.g+'</span>'
+    +'<span class="check">✓</span>'
+    +'</div>'
+    +'<div class="opt'+clO+'" id="opt-o" onclick="pickAns(\'o\')">'
+    +'<span class="opt-letter" style="color:#e65100">B</span>'
+    +'<span class="opt-text">'+q.o+'</span>'
+    +'<span class="check">✓</span>'
+    +'</div>'
+    +'<div class="opt'+clR+'" id="opt-r" onclick="pickAns(\'r\')">'
+    +'<span class="opt-letter" style="color:#c62828">C</span>'
+    +'<span class="opt-text">'+q.r+'</span>'
+    +'<span class="check">✓</span>'
+    +'</div>'
+    +'</div>'
+    +'<div class="comment-wrap">'
+    +'<div class="comment-label">💬 Commentaire (optionnel)</div>'
+    +'<textarea class="comment-input" id="comment-field" placeholder="Précisez votre contexte, une nuance, une action en cours...">'+savedComment+'</textarea>'
+    +'</div>'
+    +'<div class="btn-row">'
+    +(cur>0?'<button class="btn btn-secondary" onclick="saveComment();goBack()">← Précédent</button>':'')
+    +nextBtn
+    +'</div>'
+    +'</div>';
+}
+
+function pickAns(v){
+  ans[cur]=v;
+  ['g','o','r'].forEach(function(k){
+    var el=document.getElementById('opt-'+k);
+    if(!el) return;
+    el.className='opt'+(k===v?' sel-'+k:'');
+  });
+  var btnRow=app.querySelector('.btn-row');
+  if(btnRow && !btnRow.querySelector('.btn-primary')){
+    var isLast=cur===TOTAL-1;
+    var nb=document.createElement('button');
+    nb.className='btn btn-primary';
+    if(isLast){ nb.textContent='Voir les résultats ✓'; nb.setAttribute('onclick','saveComment();goResults()'); }
+    else       { nb.textContent='Suivant →';            nb.setAttribute('onclick','saveComment();goNext()'); }
+    btnRow.appendChild(nb);
   }
-  cur=0; render();
 }
-function next(){ cur++; render(); }
-function prev(){ if(cur>0){cur--;render();} else {cur=-1;render();} }
-function goTo(i){ if(i<=cur){cur=i;render();} }
 
-// ── PAGE RÉSULTATS ───────────────────────────────────────────
-function resultsHTML(){
-  // Calcul des scores globaux
-  const allQ=B.flatMap(b=>b.secs.flatMap(s=>s.qs));
-  let cg=0,co2=0,cr=0,tot=0;
-  allQ.forEach(q=>{
-    if(ans[q.id]){
-      if(ans[q.id].sg==='g')cg++;
-      else if(ans[q.id].sg==='o')co2++;
-      else cr++;
-      tot++;
-    }
-  });
-  const pct=tot>0?Math.round((cg/tot)*100):0;
-  const scol=pct>=70?'#2e7d32':pct>=40?'#e65100':'#c62828';
-  const slbl=pct>=70?'🟢 Bonne maturité':pct>=40?'🟠 En développement':'🔴 Chantiers prioritaires';
+function goNext(){ if(ans[cur]===undefined) return; hist.push(cur); cur++; render(); }
+function goBack(){ if(hist.length){ cur=hist.pop(); render(); } else if(cur>0){ cur--; render(); } }
+function goResults(){ if(ans[cur]===undefined) return; hist.push(cur); cur=TOTAL; render(); }
 
-  // Résultats par bloc
-  const brows=B.map(b=>{
-    const bq=b.secs.flatMap(s=>s.qs);
-    let bg=0,bo=0,br=0;
-    bq.forEach(q=>{
-      if(ans[q.id]){
-        if(ans[q.id].sg==='g')bg++;
-        else if(ans[q.id].sg==='o')bo++;
-        else br++;
-      }
+/* ── SCORES ── */
+function blockScore(blockName){
+  var ids=[];
+  questions.forEach(function(q,i){ if(q.block===blockName) ids.push(i); });
+  var total=ids.reduce(function(s,i){ return s+(ans[i]==='g'?100:ans[i]==='o'?50:0); },0);
+  return Math.round(total/ids.length);
+}
+function phaseScore(ph){
+  var ids=[];
+  questions.forEach(function(q,i){ if(q.phase===ph) ids.push(i); });
+  var total=ids.reduce(function(s,i){ return s+(ans[i]==='g'?100:ans[i]==='o'?50:0); },0);
+  return Math.round(total/ids.length);
+}
+function barCol(p){ return p>=70?'#2e7d32':p>=40?'#e65100':'#c62828'; }
+
+/* ── RÉSULTATS ── */
+function showResults(){
+  var blocks=["Stratégie","Pilotage","Processus","RH","Outils","Fournisseurs","Finance","Expérience","Fidélisation","Amélioration"];
+  var scores={};
+  blocks.forEach(function(b){ scores[b]=blockScore(b); });
+  var psA=phaseScore('A'), psB=phaseScore('B'), psC=phaseScore('C');
+  var globalScore=Math.round((psA+psB+psC)/3);
+  var ringClass=globalScore>=70?'ring-h':globalScore>=40?'ring-m':'ring-l';
+  var mention=globalScore>=70?'Bonne maturité globale':globalScore>=40?'Organisation en développement':'Axes majeurs à traiter en priorité';
+  var cntG=0,cntO=0,cntR=0;
+  for(var k in ans){ if(ans[k]==='g')cntG++; else if(ans[k]==='o')cntO++; else cntR++; }
+
+  var phaseBlocks={A:["Stratégie"],B:["Pilotage","Processus","RH","Outils","Fournisseurs","Finance"],C:["Expérience","Fidélisation","Amélioration"]};
+  var phaseLabels={A:"🎯 Phase A — Stratégie & positionnement",B:"⚙️ Phase B — Organisation & opérations",C:"⭐ Phase C — Client & croissance"};
+  var phasePtCls={A:"pt-a",B:"pt-b",C:"pt-c"};
+  var phaseScores={A:psA,B:psB,C:psC};
+
+  function renderSection(ph){
+    var rows=phaseBlocks[ph].map(function(b){
+      var p=scores[b],bc=barCol(p);
+      var tag=p>=70?'<span class="tag tag-g">✓ OK</span>':p>=40?'<span class="tag tag-o">⚠ Partiel</span>':'<span class="tag tag-r">✗ Action</span>';
+      return '<div class="brow"><div class="brow-name">'+b+tag+'</div>'
+        +'<div class="brow-bar-bg"><div class="brow-bar" style="width:'+p+'%;background:'+bc+'"></div></div>'
+        +'<div class="brow-pct" style="color:'+bc+'">'+p+'%</div></div>';
+    }).join('');
+    return '<div class="phase-section"><span class="phase-title '+phasePtCls[ph]+'">'+phaseLabels[ph]+' — '+phaseScores[ph]+'%</span>'+rows+'</div>';
+  }
+
+  app.innerHTML =
+    '<div class="card">'
+    +'<h1>📊 Résultats de l\'audit</h1>'
+    +'<p class="subtitle">'+co.n+' &nbsp;·&nbsp; '+co.sa+' &nbsp;·&nbsp; '+co.sz+'</p>'
+    +'<div class="score-ring '+ringClass+'"><span class="ring-num">'+globalScore+'%</span><span class="ring-lbl">Score global</span></div>'
+    +'<p class="mention">'+mention+'</p>'
+    +'<h2>Détail par phase & bloc</h2>'
+    +renderSection('A')+renderSection('B')+renderSection('C')
+    +'<hr class="divider">'
+    +'<div class="legend-box">'
+    +'<strong>Pondération :</strong> Vert (A) = 100 pts &nbsp;·&nbsp; Orange (B) = 50 pts &nbsp;·&nbsp; Rouge (C) = 0 pt<br>'
+    +'<strong>Réponses :</strong> ✅ '+cntG+' Vert &nbsp; 🟠 '+cntO+' Orange &nbsp; 🔴 '+cntR+' Rouge'
+    +'</div>'
+    +'<p class="chart-title">Vue radar — maturité par bloc</p>'
+    +'<canvas id="radarChart"></canvas>'
+    +'<p class="chart-title">Scores par bloc</p>'
+    +'<canvas id="barChart"></canvas>'
+    +'<hr class="divider">'
+    +'<button class="btn btn-mail" id="btn-send" onclick="sendToWebhook()">'
+    +'📧 Recevoir mon analyse par mail'
+    +'</button>'
+    +'<div class="btn-row" style="margin-top:14px">'
+    +'<button class="btn btn-secondary" onclick="goBack()">← Retour</button>'
+    +'<button class="btn btn-ghost" onclick="restartAudit()">🔄 Recommencer</button>'
+    +'</div>'
+    +'<div class="version">Auto-Audit — claude 03</div>'
+    +'</div>';
+
+  setTimeout(function(){
+    var labels=blocks;
+    var data=blocks.map(function(b){ return scores[b]; });
+    var bgC=data.map(function(v){ return v>=70?'rgba(46,125,50,.18)':v>=40?'rgba(230,81,0,.18)':'rgba(198,40,40,.18)'; });
+    var bdC=data.map(function(v){ return barCol(v); });
+    var phaseColors=blocks.map(function(b){
+      var q=questions.find(function(q){ return q.block===b; });
+      return q?(q.phase==='A'?'#1a56db':q.phase==='B'?'#b45309':'#065f46'):'#888';
     });
-    const bt=bg+bo+br;
-    const dom=bt===0?'':br>bg&&br>bo?'bad':bo>=bg?'warn':'good';
-    const bars=bt>0?`
-      <div class="bseg" style="width:${(bg/bt)*100}%;background:#2e7d32"></div>
-      <div class="bseg" style="width:${(bo/bt)*100}%;background:#e65100"></div>
-      <div class="bseg" style="width:${(br/bt)*100}%;background:#c62828"></div>
-    `:`<div style="width:100%;background:#dde3ec;height:7px;border-radius:3px"></div>`;
-    return `<div class="brow ${dom}">
-      <div class="brtitle">${b.ic} ${b.ti}</div>
-      <div style="display:flex;gap:10px;align-items:center">
-        <div class="bbar" style="flex:1">${bars}</div>
-        <div style="font-size:.78rem;color:#5a6a7a;white-space:nowrap">✅${bg} ⚠️${bo} ❌${br}</div>
-      </div>
-    </div>`;
-  }).join('');
-
-  return `<div class="results-card card">
-    <div class="rtitle">📋 Résultats — Auto-Audit Valeur Client</div>
-    <div style="text-align:center;margin-bottom:6px">
-      <span style="font-size:2.8rem;font-weight:800;color:${scol}">${pct}%</span>
-      <div style="font-size:.95rem;color:#5a6a7a;margin-top:3px">${slbl}</div>
-    </div>
-    <div class="sglobal">
-      <div class="sbox g"><div class="snum">${cg}</div><div class="slbl">✅ Maîtrisées</div></div>
-      <div class="sbox o"><div class="snum">${co2}</div><div class="slbl">⚠️ À structurer</div></div>
-      <div class="sbox r"><div class="snum">${cr}</div><div class="slbl">❌ Critiques</div></div>
-    </div>
-    <div style="font-weight:600;font-size:.95rem;color:#1e3a5f;margin-bottom:12px">Résultats par bloc</div>
-    ${brows}
-    <div class="wh">
-      <h3>📤 Envoyer les résultats via webhook</h3>
-      <p style="font-size:.83rem;color:#5a6a7a;margin-bottom:12px">
-        Collez l'URL de votre webhook (Make, Zapier, n8n, Power Automate…) pour recevoir le JSON complet.
-      </p>
-      <div class="wrow">
-        <input class="winput" id="wurl" type="url" placeholder="https://hook.make.com/xxxxx"/>
-        <button class="btn btn-p" onclick="sendWH()">Envoyer →</button>
-      </div>
-      <div id="wst" class="wstatus"></div>
-      <div style="font-size:.8rem;color:#5a6a7a;margin-top:12px;margin-bottom:4px">📋 Aperçu JSON :</div>
-      <pre id="jprev">${escHtml(JSON.stringify(buildPayload(),null,2))}</pre>
-    </div>
-    <div class="nav" style="margin-top:20px">
-      <button class="btn btn-s" onclick="prev()">← Revoir le dernier bloc</button>
-      <button class="btn btn-a" onclick="restart()">🔄 Recommencer</button>
-    </div>
-  </div>`;
+    new Chart(document.getElementById('radarChart'),{
+      type:'radar',
+      data:{labels:labels,datasets:[{label:'Score (%)',data:data,backgroundColor:'rgba(26,46,74,.1)',borderColor:'#1a2e4a',borderWidth:2,pointBackgroundColor:phaseColors,pointBorderColor:'#fff',pointRadius:6,pointHoverRadius:8}]},
+      options:{scales:{r:{min:0,max:100,ticks:{stepSize:25,font:{size:10}},pointLabels:{font:{size:11,weight:'600'}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){ return ctx.raw+'%'; }}}}}
+    });
+    new Chart(document.getElementById('barChart'),{
+      type:'bar',
+      data:{labels:labels,datasets:[{label:'Score (%)',data:data,backgroundColor:bgC,borderColor:bdC,borderWidth:2,borderRadius:7}]},
+      options:{scales:{y:{min:0,max:100,ticks:{stepSize:25},grid:{color:'#f0f0f0'}},x:{ticks:{font:{size:11}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){ return ctx.raw+'%'; }}}}}
+    });
+  },80);
 }
 
-// ── CONSTRUCTION DU PAYLOAD JSON ─────────────────────────────
-// Construit l'objet complet à envoyer au webhook
-function buildPayload(){
-  const allQ=B.flatMap(b=>b.secs.flatMap(s=>s.qs));
-  let cg=0,co2=0,cr=0,tot=0;
-  allQ.forEach(q=>{
-    if(ans[q.id]){
-      if(ans[q.id].sg==='g')cg++;
-      else if(ans[q.id].sg==='o')co2++;
-      else cr++;
-      tot++;
-    }
+/* ── WEBHOOK ── */
+function sendToWebhook(){
+  var btn=document.getElementById('btn-send');
+  if(!btn) return;
+
+  // Construire le payload complet
+  var blocks=["Stratégie","Pilotage","Processus","RH","Outils","Fournisseurs","Finance","Expérience","Fidélisation","Amélioration"];
+  var scores={};
+  blocks.forEach(function(b){ scores[b]=blockScore(b); });
+  var psA=phaseScore('A'), psB=phaseScore('B'), psC=phaseScore('C');
+  var globalScore=Math.round((psA+psB+psC)/3);
+
+  var reponses=[];
+  questions.forEach(function(q,i){
+    var v=ans[i];
+    var labelMap={g:'Vert — '+q.g, o:'Orange — '+q.o, r:'Rouge — '+q.r};
+    reponses.push({
+      index: i+1,
+      id: q.id,
+      phase: q.phase,
+      bloc: q.block,
+      question: q.text,
+      valeur: v||'',
+      reponse_choisie: v ? labelMap[v] : 'Sans réponse',
+      commentaire: comments[i]||''
+    });
   });
-  const pct=tot>0?Math.round((cg/tot)*100):0;
-  return {
-    meta:{
-      audit:"Auto-Audit Valeur Client",
-      version:"1.0",
-      date:new Date().toISOString(),
-      entreprise:co.n,
-      contact:co.c,
-      email:co.e,
-      secteur:co.s
+
+  var payload={
+    meta:{ source:'Auto-Audit claude 03', date: new Date().toISOString() },
+    entreprise:{ nom:co.n, secteur:co.sa, taille:co.sz, email:co.e, telephone:co.p },
+    scores:{
+      global: globalScore,
+      phase_A: psA, phase_B: psB, phase_C: psC,
+      par_bloc: scores
     },
-    synthese:{
-      score_pct:pct,
-      reponses_vertes:cg,
-      reponses_oranges:co2,
-      reponses_rouges:cr,
-      total_repondues:tot,
-      niveau:pct>=70?'Bonne maturité':pct>=40?'En développement':'Chantiers prioritaires'
-    },
-    blocs:B.map(b=>({
-      bloc:b.ti,
-      questions:b.secs.flatMap(s=>s.qs.map(q=>({
-        section:s.ti,
-        question:q.tx,
-        reponse:ans[q.id]?ans[q.id].lb:null,
-        signal:ans[q.id]?({'g':'vert','o':'orange','r':'rouge'}[ans[q.id].sg]):null,
-        commentaire:ans[q.id]?ans[q.id].cm||null:null
-      })))
-    }))
+    reponses: reponses
   };
+
+  // UI — état chargement
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>Envoi en cours...';
+
+  fetch(WEBHOOK_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(function(res){
+    if(res.ok){
+      btn.innerHTML='✅ Analyse envoyée !';
+      btn.style.background='#2e7d32';
+      showToast('Votre analyse a été envoyée à '+co.e, 'ok');
+    } else {
+      throw new Error('HTTP '+res.status);
+    }
+  })
+  .catch(function(err){
+    btn.disabled=false;
+    btn.innerHTML='📧 Recevoir mon analyse par mail';
+    showToast('Erreur d\'envoi — veuillez réessayer ('+err.message+')', 'err');
+  });
 }
 
-// ── ENVOI WEBHOOK ────────────────────────────────────────────
-async function sendWH(){
-  const url=document.getElementById('wurl').value.trim();
-  const st=document.getElementById('wst');
-  if(!url){
-    st.className='wstatus err';
-    st.textContent='⚠️ Veuillez renseigner une URL de webhook.';
-    return;
-  }
-  st.className='wstatus ld';
-  st.textContent='⏳ Envoi en cours…';
-  try{
-    // mode no-cors pour les webhooks cross-origin (Make, Zapier…)
-    await fetch(url,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(buildPayload()),
-      mode:'no-cors'
-    });
-    st.className='wstatus ok';
-    st.textContent='✅ Données envoyées avec succès ! Vérifiez votre webhook.';
-  } catch(e){
-    st.className='wstatus err';
-    st.textContent='❌ Erreur d\'envoi : '+e.message;
+function restartAudit(){
+  if(confirm('Cela effacera toutes les données. Continuer ?')){
+    cur=-1; ans={}; comments={}; hist=[]; co={}; render();
   }
 }
 
-// ── UTILITAIRES ──────────────────────────────────────────────
-function restart(){
-  if(confirm('Recommencer ? Toutes vos réponses seront effacées.')){
-    ans={}; cur=-1; render();
-  }
-}
-// Échappe le HTML pour affichage dans <pre>
-function escHtml(s){
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+render();
 </script>
 </body>
 </html>
