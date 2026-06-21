@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Auto-Audit — claude 03</title>
+<title>AutoEvaluation - FGBX </title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -17,8 +17,6 @@
   input,select{width:100%;padding:10px 13px;border:1px solid #d0d5dd;border-radius:9px;font-size:.95rem;outline:none;transition:border .2s;color:#222}
   input:focus,select:focus{border-color:#1a2e4a}
   .err{border:2px solid #c62828!important;background:#fff8f8}
-
-  /* Buttons */
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 20px;border:none;border-radius:10px;font-size:.95rem;cursor:pointer;transition:all .18s;font-weight:600}
   .btn-full{width:100%;margin-top:10px}
   .btn-primary{background:#1a2e4a;color:#fff}
@@ -31,41 +29,29 @@
   .btn-mail:hover{background:#1446b8}
   .btn-mail:disabled{background:#9ab0e0;cursor:not-allowed}
   .btn-row{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
-
-  /* Phase pills */
   .phase-strip{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
   .phase-pill{padding:5px 14px;border-radius:99px;font-size:.75rem;font-weight:700;letter-spacing:.4px;opacity:.3;transition:opacity .2s}
   .phase-pill.active{opacity:1}
   .pill-a{background:#e8f0fe;color:#1a56db}
-  .pill-b{background:#fef3c7;color:#b45309}
+  .pill-b{background:#fef3c7;color:#e65100}
   .pill-c{background:#d1fae5;color:#065f46}
-
-  /* Progress */
   .prog-wrap{background:#e8ecf2;border-radius:99px;height:6px;margin-bottom:5px}
   .prog-bar{height:6px;border-radius:99px;transition:width .4s}
   .prog-bar-a{background:#1a56db}
-  .prog-bar-b{background:#b45309}
+  .prog-bar-b{background:#e65100}
   .prog-bar-c{background:#065f46}
   .prog-label{font-size:.77rem;color:#aaa;margin-bottom:18px;display:flex;justify-content:space-between}
-
-  /* Block badge */
   .block-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;font-size:.73rem;font-weight:700;margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
   .badge-a{background:#e8f0fe;color:#1a56db}
-  .badge-b{background:#fef3c7;color:#b45309}
+  .badge-b{background:#fef3c7;color:#e65100}
   .badge-c{background:#d1fae5;color:#065f46}
-
-  /* Question text */
   .q-text{font-size:1.05rem;color:#1a2e4a;font-weight:700;line-height:1.5;margin-bottom:20px}
-
-  /* Options — liste verticale, sans icônes */
   .opts-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
   .opt{padding:14px 18px;border:2px solid #e0e5ee;border-radius:12px;cursor:pointer;font-size:.9rem;line-height:1.45;transition:all .15s;display:flex;align-items:flex-start;gap:12px;user-select:none;position:relative}
   .opt:hover{border-color:#1a2e4a;background:#f5f7fc}
   .opt-letter{flex-shrink:0;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;border:2px solid currentColor;margin-top:1px}
   .opt-text{color:#444;flex:1}
   .opt .check{display:none;position:absolute;top:10px;right:12px;font-size:.85rem;font-weight:800}
-
-  /* Surbrillance */
   .opt.sel-g{border-color:#2e7d32;background:#e8f5e9}
   .opt.sel-g .opt-letter{background:#2e7d32;color:#fff;border-color:#2e7d32}
   .opt.sel-g .opt-text{color:#1b5e20;font-weight:600}
@@ -78,14 +64,10 @@
   .opt.sel-r .opt-letter{background:#c62828;color:#fff;border-color:#c62828}
   .opt.sel-r .opt-text{color:#b71c1c;font-weight:600}
   .opt.sel-r .check{display:block;color:#c62828}
-
-  /* Commentaire */
   .comment-wrap{margin-top:4px}
   .comment-label{font-size:.78rem;color:#999;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
   .comment-input{width:100%;padding:9px 12px;border:1px solid #e0e5ee;border-radius:9px;font-size:.88rem;color:#444;resize:vertical;min-height:60px;outline:none;font-family:inherit;transition:border .2s;background:#fafbfc}
   .comment-input:focus{border-color:#1a2e4a;background:#fff}
-
-  /* Results */
   .score-ring{width:130px;height:130px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 10px;border:8px solid}
   .ring-h{border-color:#2e7d32;color:#2e7d32;background:#f1f8e9}
   .ring-m{border-color:#e65100;color:#e65100;background:#fff3e0}
@@ -93,13 +75,11 @@
   .ring-num{font-size:2.2rem;font-weight:800;line-height:1}
   .ring-lbl{font-size:.7rem;font-weight:700;margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
   .mention{text-align:center;font-weight:700;color:#555;margin-bottom:28px;font-size:.95rem}
-
   .phase-section{margin-bottom:24px}
   .phase-title{font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;padding:6px 14px;border-radius:99px;display:inline-block;margin-bottom:12px}
   .pt-a{background:#e8f0fe;color:#1a56db}
   .pt-b{background:#fef3c7;color:#b45309}
   .pt-c{background:#d1fae5;color:#065f46}
-
   .brow{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:.87rem}
   .brow-name{width:145px;flex-shrink:0;color:#333;font-weight:600}
   .brow-bar-bg{flex:1;background:#e8ecf2;border-radius:99px;height:10px}
@@ -109,21 +89,16 @@
   .tag-g{background:#e8f5e9;color:#2e7d32}
   .tag-o{background:#fff3e0;color:#e65100}
   .tag-r{background:#ffebee;color:#c62828}
-
   .legend-box{margin-top:18px;padding:13px 16px;background:#f7f8fa;border-radius:10px;font-size:.82rem;color:#666;line-height:1.9}
   .version{text-align:right;font-size:.68rem;color:#ccc;margin-top:12px}
   canvas{display:block;max-width:500px;margin:16px auto 0}
   .chart-title{text-align:center;font-weight:700;color:#1a2e4a;margin-top:22px;font-size:.95rem}
   .divider{border:none;border-top:1px solid #eee;margin:20px 0}
-
-  /* Toast notification */
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:13px 24px;border-radius:12px;font-size:.9rem;font-weight:600;color:#fff;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
   .toast.show{opacity:1}
   .toast-ok{background:#2e7d32}
   .toast-err{background:#c62828}
   .toast-info{background:#1a2e4a}
-
-  /* Spinner */
   .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
   @keyframes spin{to{transform:rotate(360deg)}}
 </style>
@@ -135,7 +110,7 @@
 <script>
 var app   = document.getElementById('app');
 var toast = document.getElementById('toast');
-var cur   = -1, ans = {}, comments = {}, hist = [], co = {};
+var cur   = -2, ans = {}, comments = {}, hist = [], co = {};
 
 var WEBHOOK_URL = 'http://XXXXXXXXXXXXXXXXXXXXXXXXXXXX';
 
@@ -200,46 +175,88 @@ var questions = [
 var TOTAL = questions.length;
 
 var phaseInfo = {
-  A:{label:"Phase A — Stratégie",cls:"pill-a",barCls:"prog-bar-a",badgeCls:"badge-a",ptCls:"pt-a",icon:"🎯"},
-  B:{label:"Phase B — Organisation",cls:"pill-b",barCls:"prog-bar-b",badgeCls:"badge-b",ptCls:"pt-b",icon:"⚙️"},
-  C:{label:"Phase C — Client",cls:"pill-c",barCls:"prog-bar-c",badgeCls:"badge-c",ptCls:"pt-c",icon:"⭐"}
+  A:{label:"Stratégie",cls:"pill-a",barCls:"prog-bar-a",badgeCls:"badge-a",ptCls:"pt-a",icon:"🎯"},
+  B:{label:"Organisation",cls:"pill-b",barCls:"prog-bar-b",badgeCls:"badge-b",ptCls:"pt-b",icon:"⚙️"},
+  C:{label:"Client",cls:"pill-c",barCls:"prog-bar-c",badgeCls:"badge-c",ptCls:"pt-c",icon:"⭐"}
 };
 
-/* ── Toast ── */
 var toastTimer;
-function showToast(msg, type){
-  toast.textContent = msg;
-  toast.className = 'toast toast-'+(type||'info')+' show';
+function showToast(msg,type){
+  toast.textContent=msg;
+  toast.className='toast toast-'+(type||'info')+' show';
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){ toast.className='toast'; }, 3500);
+  toastTimer=setTimeout(function(){toast.className='toast';},3500);
 }
 
-/* ── Sauvegarde commentaire courant ── */
 function saveComment(){
-  var el = document.getElementById('comment-field');
-  if(el) comments[cur] = el.value;
+  var el=document.getElementById('comment-field');
+  if(el) comments[cur]=el.value;
 }
 
 /* ── RENDER ── */
 function render(){
-  if(cur===-1)        showIntro();
+  if(cur===-2)        showLanding();
+  else if(cur===-1)   showIntro();
   else if(cur>=TOTAL) showResults();
   else                showQuiz();
 }
 
-/* ── INTRO ── */
-function showIntro(){
-  var opts = sectors.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('');
+/* ══════════════════════════════════════
+   ✅ PAGE D'INTRODUCTION
+══════════════════════════════════════ */
+function showLanding(){
   app.innerHTML =
     '<div class="card">'
-    +'<h1>🔍 Auto-Audit Entreprise</h1>'
-    +'<p class="subtitle">Évaluez la maturité de votre organisation en <strong>45 questions</strong> réparties sur <strong>3 phases</strong> et <strong>10 blocs</strong>.</p>'
+    +'<h1>Auto évaluation de votre organisation</h1>'
+
+    +'<p class="subtitle">'
+    +'Ce questionnaire a été conçu pour vous offrir une vision synthétique et structurée du fonctionnement de votre entreprise.<br><br>'
+
+    +'À travers une série de questions réparties sur plusieurs domaines clés '
+    +'(stratégie, organisation, processus, ressources, expérience client\u2026), cet évaluation vous permet de\u00a0:<br><br>'
+
+    +'\u2022 <strong>Identifier vos points forts</strong><br>'
+    +'\u2022 <strong>Mettre en évidence les zones de progression</strong><br>'
+    +'\u2022 <strong>Prioriser les leviers d\u2019amélioration les plus impactants</strong><br><br>'
+
+    +'L\u2019objectif est de vous fournir <strong>une lecture claire et opérationnelle</strong> de vos pratiques actuelles.<br>'
+    +'Répondez honnêtement et utilisez la zone de commentaire afin de rendre l\'étude plus pertinente pour vous.'
+    +'</p>'
+
+    +'<h2>Visualisation et priorisation</h2>'
+
+    +'<p class="subtitle">'
+    +'En quelques minutes, vous obtiendrez une représentation visuelle de votre niveau de maturité sur les principaux axes de performance. '
+    +'Cela vous aidera à structurer votre développement et gagner en efficacité.<br><br>'
+    +'<strong>Durée\u00a0: inférieure à 10 minutes</strong>'
+    +'</p>'
+
+    +'<button class="btn btn-primary btn-full" onclick="goToForm()">'
+    +'Commencer l\u2019évaluation \u2192'
+    +'</button>'
+
+    +'<div class="version">AutoEvaluation FGBX </div>'
+    +'</div>';
+}
+
+function goToForm(){
+  cur=-1;
+  render();
+}
+
+/* ── PAGE SAISIE INFOS ── */
+function showIntro(){
+  var opts=sectors.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
+  app.innerHTML=
+    '<div class="card">'
+    +'<h1>🔍 Auto Evaluation Entreprise</h1>'
+    +'<p class="subtitle">Évaluez la maturité de votre organisation sur <strong>3 axes</strong> et <strong>10 thématiques</strong>.</p>'
     +'<div class="phase-strip">'
-    +'<span class="phase-pill pill-a active">🎯 Phase A — Stratégie (5 q.)</span>'
-    +'<span class="phase-pill pill-b active">⚙️ Phase B — Organisation (24 q.)</span>'
-    +'<span class="phase-pill pill-c active">⭐ Phase C — Client (16 q.)</span>'
+    +'<span class="phase-pill pill-a active">🎯 Stratégie</span>'
+    +'<span class="phase-pill pill-b active">⚙️ Organisation</span>'
+    +'<span class="phase-pill pill-c active">⭐ Client</span>'
     +'</div>'
-    +'<label>Nom de l\'entreprise *</label><input id="fn" placeholder="Ex : Acme SAS">'
+    +'<label>Nom de l\'entreprise *</label><input id="fn" placeholder="Ex : Entreprise SAS">'
     +'<label>Secteur d\'activité *</label>'
     +'<select id="fsa"><option value="">— Sélectionner —</option>'+opts+'</select>'
     +'<label>Taille de l\'entreprise *</label>'
@@ -249,49 +266,50 @@ function showIntro(){
     +'<option>Plus de 1000 personnes</option></select>'
     +'<label>Email *</label><input id="fe" type="email" placeholder="contact@entreprise.fr">'
     +'<label>Téléphone</label><input id="fph" type="tel" placeholder="+33 6 00 00 00 00">'
-    +'<button class="btn btn-primary btn-full" onclick="startAudit()">Démarrer l\'audit →</button>'
-    +'<div class="version">Auto-Audit — claude 03</div>'
+    +'<div class="btn-row" style="margin-top:18px">'
+    +'<button class="btn btn-secondary" onclick="cur=-2;render()">← Retour</button>'
+    +'<button class="btn btn-primary" style="flex:1" onclick="startAudit()">Démarrer l\'auto-évaluation →</button>'
+    +'</div>'
+    +'<div class="version">AutoEvaluation - FGBX /div>'
     +'</div>';
 }
 
 function startAudit(){
-  var fn=document.getElementById('fn'), fsa=document.getElementById('fsa'),
-      fsz=document.getElementById('fsz'), fe=document.getElementById('fe'),
+  var fn=document.getElementById('fn'),fsa=document.getElementById('fsa'),
+      fsz=document.getElementById('fsz'),fe=document.getElementById('fe'),
       fph=document.getElementById('fph');
-  [fn,fsa,fsz,fe,fph].forEach(function(el){ el.classList.remove('err'); });
+  [fn,fsa,fsz,fe,fph].forEach(function(el){el.classList.remove('err');});
   var ok=true;
-  if(!fn.value.trim())  { fn.classList.add('err');  ok=false; }
-  if(!fsa.value)        { fsa.classList.add('err'); ok=false; }
-  if(!fsz.value)        { fsz.classList.add('err'); ok=false; }
-  if(!fe.value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fe.value)) { fe.classList.add('err'); ok=false; }
-  if(fph.value && !/^[0-9 +\-().]{7,20}$/.test(fph.value)) { fph.classList.add('err'); ok=false; }
+  if(!fn.value.trim())  {fn.classList.add('err'); ok=false;}
+  if(!fsa.value)        {fsa.classList.add('err');ok=false;}
+  if(!fsz.value)        {fsz.classList.add('err');ok=false;}
+  if(!fe.value||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fe.value)){fe.classList.add('err');ok=false;}
+  if(fph.value&&!/^[0-9 +\-().]{7,20}$/.test(fph.value)){fph.classList.add('err');ok=false;}
   if(!ok) return;
   co={n:fn.value.trim(),sa:fsa.value,sz:fsz.value,e:fe.value.trim(),p:fph.value.trim()};
-  cur=0; ans={}; comments={}; hist=[];
+  cur=0;ans={};comments={};hist=[];
   render();
 }
 
 /* ── QUIZ ── */
 function showQuiz(){
-  var q=questions[cur], pi=phaseInfo[q.phase];
+  var q=questions[cur],pi=phaseInfo[q.phase];
   var pct=Math.round(cur/TOTAL*100);
   var prev=ans[cur];
-  var clG=prev==='g'?' sel-g':'', clO=prev==='o'?' sel-o':'', clR=prev==='r'?' sel-r':'';
-  var hasAns=prev!==undefined, isLast=cur===TOTAL-1;
-  var savedComment = comments[cur]||'';
-
-  var nextBtn = hasAns
-    ? (isLast
-        ? '<button class="btn btn-primary" onclick="saveComment();goResults()">Voir les résultats ✓</button>'
-        : '<button class="btn btn-primary" id="btn-next" onclick="saveComment();goNext()">Suivant →</button>')
-    : '';
-
-  app.innerHTML =
+  var clG=prev==='g'?' sel-g':'',clO=prev==='o'?' sel-o':'',clR=prev==='r'?' sel-r':'';
+  var hasAns=prev!==undefined,isLast=cur===TOTAL-1;
+  var savedComment=comments[cur]||'';
+  var nextBtn=hasAns
+    ?(isLast
+      ?'<button class="btn btn-primary" onclick="saveComment();goResults()">Voir les résultats ✓</button>'
+      :'<button class="btn btn-primary" id="btn-next" onclick="saveComment();goNext()">Suivant →</button>')
+    :'';
+  app.innerHTML=
     '<div class="card">'
     +'<div class="phase-strip">'
-    +'<span class="phase-pill '+phaseInfo.A.cls+(q.phase==='A'?' active':'')+'">'+'🎯 Phase A</span>'
-    +'<span class="phase-pill '+phaseInfo.B.cls+(q.phase==='B'?' active':'')+'">'+'⚙️ Phase B</span>'
-    +'<span class="phase-pill '+phaseInfo.C.cls+(q.phase==='C'?' active':'')+'">'+'⭐ Phase C</span>'
+    +'<span class="phase-pill '+phaseInfo.A.cls+(q.phase==='A'?' active':'')+'">🎯 Stratégie</span>'
+    +'<span class="phase-pill '+phaseInfo.B.cls+(q.phase==='B'?' active':'')+'">⚙️ Organisation</span>'
+    +'<span class="phase-pill '+phaseInfo.C.cls+(q.phase==='C'?' active':'')+'">⭐ Client</span>'
     +'</div>'
     +'<div class="prog-wrap"><div class="prog-bar '+pi.barCls+'" style="width:'+pct+'%"></div></div>'
     +'<div class="prog-label"><span>Question '+(cur+1)+' / '+TOTAL+' &nbsp;·&nbsp; '+q.block+'</span><span>'+pct+'% complété</span></div>'
@@ -301,18 +319,15 @@ function showQuiz(){
     +'<div class="opt'+clG+'" id="opt-g" onclick="pickAns(\'g\')">'
     +'<span class="opt-letter" style="color:#2e7d32">A</span>'
     +'<span class="opt-text">'+q.g+'</span>'
-    +'<span class="check">✓</span>'
-    +'</div>'
+    +'<span class="check">✓</span></div>'
     +'<div class="opt'+clO+'" id="opt-o" onclick="pickAns(\'o\')">'
     +'<span class="opt-letter" style="color:#e65100">B</span>'
     +'<span class="opt-text">'+q.o+'</span>'
-    +'<span class="check">✓</span>'
-    +'</div>'
+    +'<span class="check">✓</span></div>'
     +'<div class="opt'+clR+'" id="opt-r" onclick="pickAns(\'r\')">'
     +'<span class="opt-letter" style="color:#c62828">C</span>'
     +'<span class="opt-text">'+q.r+'</span>'
-    +'<span class="check">✓</span>'
-    +'</div>'
+    +'<span class="check">✓</span></div>'
     +'</div>'
     +'<div class="comment-wrap">'
     +'<div class="comment-label">💬 Commentaire (optionnel)</div>'
@@ -333,52 +348,50 @@ function pickAns(v){
     el.className='opt'+(k===v?' sel-'+k:'');
   });
   var btnRow=app.querySelector('.btn-row');
-  if(btnRow && !btnRow.querySelector('.btn-primary')){
+  if(btnRow&&!btnRow.querySelector('.btn-primary')){
     var isLast=cur===TOTAL-1;
     var nb=document.createElement('button');
     nb.className='btn btn-primary';
-    if(isLast){ nb.textContent='Voir les résultats ✓'; nb.setAttribute('onclick','saveComment();goResults()'); }
-    else       { nb.textContent='Suivant →';            nb.setAttribute('onclick','saveComment();goNext()'); }
+    if(isLast){nb.textContent='Voir les résultats ✓';nb.setAttribute('onclick','saveComment();goResults()');}
+    else      {nb.textContent='Suivant →';           nb.setAttribute('onclick','saveComment();goNext()');}
     btnRow.appendChild(nb);
   }
 }
 
-function goNext(){ if(ans[cur]===undefined) return; hist.push(cur); cur++; render(); }
-function goBack(){ if(hist.length){ cur=hist.pop(); render(); } else if(cur>0){ cur--; render(); } }
-function goResults(){ if(ans[cur]===undefined) return; hist.push(cur); cur=TOTAL; render(); }
+function goNext(){if(ans[cur]===undefined)return;hist.push(cur);cur++;render();}
+function goBack(){if(hist.length){cur=hist.pop();render();}else if(cur>0){cur--;render();}}
+function goResults(){if(ans[cur]===undefined)return;hist.push(cur);cur=TOTAL;render();}
 
 /* ── SCORES ── */
 function blockScore(blockName){
   var ids=[];
-  questions.forEach(function(q,i){ if(q.block===blockName) ids.push(i); });
-  var total=ids.reduce(function(s,i){ return s+(ans[i]==='g'?100:ans[i]==='o'?50:0); },0);
+  questions.forEach(function(q,i){if(q.block===blockName)ids.push(i);});
+  var total=ids.reduce(function(s,i){return s+(ans[i]==='g'?100:ans[i]==='o'?50:0);},0);
   return Math.round(total/ids.length);
 }
 function phaseScore(ph){
   var ids=[];
-  questions.forEach(function(q,i){ if(q.phase===ph) ids.push(i); });
-  var total=ids.reduce(function(s,i){ return s+(ans[i]==='g'?100:ans[i]==='o'?50:0); },0);
+  questions.forEach(function(q,i){if(q.phase===ph)ids.push(i);});
+  var total=ids.reduce(function(s,i){return s+(ans[i]==='g'?100:ans[i]==='o'?50:0);},0);
   return Math.round(total/ids.length);
 }
-function barCol(p){ return p>=70?'#2e7d32':p>=40?'#e65100':'#c62828'; }
+function barCol(p){return p>=70?'#2e7d32':p>=40?'#e65100':'#c62828';}
 
 /* ── RÉSULTATS ── */
 function showResults(){
   var blocks=["Stratégie","Pilotage","Processus","RH","Outils","Fournisseurs","Finance","Expérience","Fidélisation","Amélioration"];
   var scores={};
-  blocks.forEach(function(b){ scores[b]=blockScore(b); });
-  var psA=phaseScore('A'), psB=phaseScore('B'), psC=phaseScore('C');
+  blocks.forEach(function(b){scores[b]=blockScore(b);});
+  var psA=phaseScore('A'),psB=phaseScore('B'),psC=phaseScore('C');
   var globalScore=Math.round((psA+psB+psC)/3);
   var ringClass=globalScore>=70?'ring-h':globalScore>=40?'ring-m':'ring-l';
   var mention=globalScore>=70?'Bonne maturité globale':globalScore>=40?'Organisation en développement':'Axes majeurs à traiter en priorité';
   var cntG=0,cntO=0,cntR=0;
-  for(var k in ans){ if(ans[k]==='g')cntG++; else if(ans[k]==='o')cntO++; else cntR++; }
-
+  for(var k in ans){if(ans[k]==='g')cntG++;else if(ans[k]==='o')cntO++;else cntR++;}
   var phaseBlocks={A:["Stratégie"],B:["Pilotage","Processus","RH","Outils","Fournisseurs","Finance"],C:["Expérience","Fidélisation","Amélioration"]};
-  var phaseLabels={A:"🎯 Phase A — Stratégie & positionnement",B:"⚙️ Phase B — Organisation & opérations",C:"⭐ Phase C — Client & croissance"};
+  var phaseLabels={A:"🎯 Stratégie & positionnement",B:"⚙️ Organisation & opérations",C:"⭐ Client & croissance"};
   var phasePtCls={A:"pt-a",B:"pt-b",C:"pt-c"};
   var phaseScores={A:psA,B:psB,C:psC};
-
   function renderSection(ph){
     var rows=phaseBlocks[ph].map(function(b){
       var p=scores[b],bc=barCol(p);
@@ -389,53 +402,49 @@ function showResults(){
     }).join('');
     return '<div class="phase-section"><span class="phase-title '+phasePtCls[ph]+'">'+phaseLabels[ph]+' — '+phaseScores[ph]+'%</span>'+rows+'</div>';
   }
-
-  app.innerHTML =
+  app.innerHTML=
     '<div class="card">'
-    +'<h1>📊 Résultats de l\'audit</h1>'
+    +'<h1>📊 Résultats de l\'évaluation</h1>'
     +'<p class="subtitle">'+co.n+' &nbsp;·&nbsp; '+co.sa+' &nbsp;·&nbsp; '+co.sz+'</p>'
     +'<div class="score-ring '+ringClass+'"><span class="ring-num">'+globalScore+'%</span><span class="ring-lbl">Score global</span></div>'
     +'<p class="mention">'+mention+'</p>'
-    +'<h2>Détail par phase & bloc</h2>'
+    +'<h2>Détail par axes & thématiques</h2>'
     +renderSection('A')+renderSection('B')+renderSection('C')
     +'<hr class="divider">'
     +'<div class="legend-box">'
     +'<strong>Pondération :</strong> Vert (A) = 100 pts &nbsp;·&nbsp; Orange (B) = 50 pts &nbsp;·&nbsp; Rouge (C) = 0 pt<br>'
     +'<strong>Réponses :</strong> ✅ '+cntG+' Vert &nbsp; 🟠 '+cntO+' Orange &nbsp; 🔴 '+cntR+' Rouge'
     +'</div>'
-    +'<p class="chart-title">Vue radar — maturité par bloc</p>'
+    +'<p class="chart-title">Vue radar — maturité par thématique</p>'
     +'<canvas id="radarChart"></canvas>'
-    +'<p class="chart-title">Scores par bloc</p>'
+    +'<p class="chart-title">Scores par thématique</p>'
     +'<canvas id="barChart"></canvas>'
     +'<hr class="divider">'
-    +'<button class="btn btn-mail" id="btn-send" onclick="sendToWebhook()">'
-    +'📧 Recevoir mon analyse par mail'
-    +'</button>'
+    +'<button class="btn btn-mail" id="btn-send" onclick="sendToWebhook()">📧 Recevoir mon analyse par mail</button>'
     +'<div class="btn-row" style="margin-top:14px">'
     +'<button class="btn btn-secondary" onclick="goBack()">← Retour</button>'
     +'<button class="btn btn-ghost" onclick="restartAudit()">🔄 Recommencer</button>'
     +'</div>'
-    +'<div class="version">Auto-Audit — claude 03</div>'
+    +'<div class="version">AutoEvaluation - FGBX </div>'
     +'</div>';
-
   setTimeout(function(){
     var labels=blocks;
-    var data=blocks.map(function(b){ return scores[b]; });
-    var bgC=data.map(function(v){ return v>=70?'rgba(46,125,50,.18)':v>=40?'rgba(230,81,0,.18)':'rgba(198,40,40,.18)'; });
-    var bdC=data.map(function(v){ return barCol(v); });
+    var data=blocks.map(function(b){return scores[b];});
+    var bgC=data.map(function(v){return v>=70?'rgba(46,125,50,.18)':v>=40?'rgba(230,81,0,.18)':'rgba(198,40,40,.18)';});
+    var bdC=data.map(function(v){return barCol(v);});
     var phaseColors=blocks.map(function(b){
-      var q=questions.find(function(q){ return q.block===b; });
+      var q=questions.find(function(q){return q.block===b;});
       return q?(q.phase==='A'?'#1a56db':q.phase==='B'?'#b45309':'#065f46'):'#888';
     });
     new Chart(document.getElementById('radarChart'),{
       type:'radar',
       data:{labels:labels,datasets:[{label:'Score (%)',data:data,backgroundColor:'rgba(26,46,74,.1)',borderColor:'#1a2e4a',borderWidth:2,pointBackgroundColor:phaseColors,pointBorderColor:'#fff',pointRadius:6,pointHoverRadius:8}]},
-      options:{scales:{r:{min:0,max:100,ticks:{stepSize:25,font:{size:10}},pointLabels:{font:{size:11,weight:'600'}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){ return ctx.raw+'%'; }}}}}
+      options:{scales:{r:{min:0,max:100,ticks:{stepSize:25,font:{size:10}},pointLabels:{font:{size:11,weight:'600'}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.raw+'%';}}}}}
     });
     new Chart(document.getElementById('barChart'),{
       type:'bar',
       data:{labels:labels,datasets:[{label:'Score (%)',data:data,backgroundColor:bgC,borderColor:bdC,borderWidth:2,borderRadius:7}]},
-      options:{scales:{y:{min:0,max:100,ticks:{stepSize:25},grid:{color:'#f0f0f0'}},x:{ticks:{font:{size:11}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){ return ctx.raw+'%'; }}}}}
+      options:{scales:{y:{min:0,max:100,ticks:{stepSize:25},grid:{color:'#f0f0f0'}},x:{ticks:{font:{size:11}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.raw+'%';}}}}}
     });
   },80);
 }
@@ -444,69 +453,40 @@ function showResults(){
 function sendToWebhook(){
   var btn=document.getElementById('btn-send');
   if(!btn) return;
-
-  // Construire le payload complet
   var blocks=["Stratégie","Pilotage","Processus","RH","Outils","Fournisseurs","Finance","Expérience","Fidélisation","Amélioration"];
   var scores={};
-  blocks.forEach(function(b){ scores[b]=blockScore(b); });
-  var psA=phaseScore('A'), psB=phaseScore('B'), psC=phaseScore('C');
+  blocks.forEach(function(b){scores[b]=blockScore(b);});
+  var psA=phaseScore('A'),psB=phaseScore('B'),psC=phaseScore('C');
   var globalScore=Math.round((psA+psB+psC)/3);
-
   var reponses=[];
   questions.forEach(function(q,i){
     var v=ans[i];
-    var labelMap={g:'Vert — '+q.g, o:'Orange — '+q.o, r:'Rouge — '+q.r};
-    reponses.push({
-      index: i+1,
-      id: q.id,
-      phase: q.phase,
-      bloc: q.block,
-      question: q.text,
-      valeur: v||'',
-      reponse_choisie: v ? labelMap[v] : 'Sans réponse',
-      commentaire: comments[i]||''
-    });
+    var labelMap={g:'Vert — '+q.g,o:'Orange — '+q.o,r:'Rouge — '+q.r};
+    reponses.push({index:i+1,id:q.id,phase:q.phase,bloc:q.block,question:q.text,valeur:v||'',reponse_choisie:v?labelMap[v]:'Sans réponse',commentaire:comments[i]||''});
   });
-
   var payload={
-    meta:{ source:'Auto-Audit claude 03', date: new Date().toISOString() },
-    entreprise:{ nom:co.n, secteur:co.sa, taille:co.sz, email:co.e, telephone:co.p },
-    scores:{
-      global: globalScore,
-      phase_A: psA, phase_B: psB, phase_C: psC,
-      par_bloc: scores
-    },
-    reponses: reponses
+    meta:{source:'AutoEvaluation - FGBX',date:new Date().toISOString()},
+    entreprise:{nom:co.n,secteur:co.sa,taille:co.sz,email:co.e,telephone:co.p},
+    scores:{global:globalScore,phase_A:psA,phase_B:psB,phase_C:psC,par_bloc:scores},
+    reponses:reponses
   };
-
-  // UI — état chargement
   btn.disabled=true;
   btn.innerHTML='<span class="spinner"></span>Envoi en cours...';
-
-  fetch(WEBHOOK_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(payload)
-  })
+  fetch(WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
   .then(function(res){
-    if(res.ok){
-      btn.innerHTML='✅ Analyse envoyée !';
-      btn.style.background='#2e7d32';
-      showToast('Votre analyse a été envoyée à '+co.e, 'ok');
-    } else {
-      throw new Error('HTTP '+res.status);
-    }
+    if(res.ok){btn.innerHTML='✅ Analyse envoyée !';btn.style.background='#2e7d32';showToast('Votre analyse a été envoyée à '+co.e,'ok');}
+    else{throw new Error('HTTP '+res.status);}
   })
   .catch(function(err){
     btn.disabled=false;
     btn.innerHTML='📧 Recevoir mon analyse par mail';
-    showToast('Erreur d\'envoi — veuillez réessayer ('+err.message+')', 'err');
+    showToast('Erreur d\'envoi — veuillez réessayer ('+err.message+')','err');
   });
 }
 
 function restartAudit(){
   if(confirm('Cela effacera toutes les données. Continuer ?')){
-    cur=-1; ans={}; comments={}; hist=[]; co={}; render();
+    cur=-2;ans={};comments={};hist=[];co={};render();
   }
 }
 
