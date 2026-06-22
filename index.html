@@ -464,12 +464,32 @@ function sendToWebhook(){
     var labelMap={g:'Vert — '+q.g,o:'Orange — '+q.o,r:'Rouge — '+q.r};
     reponses.push({index:i+1,id:q.id,phase:q.phase,bloc:q.block,question:q.text,valeur:v||'',reponse_choisie:v?labelMap[v]:'Sans réponse',commentaire:comments[i]||''});
   });
-  var payload={
-    meta:{source:'AutoEvaluation - FGBX',date:new Date().toISOString()},
-    entreprise:{nom:co.n,secteur:co.sa,taille:co.sz,email:co.e,telephone:co.p},
-    scores:{global:globalScore,phase_A:psA,phase_B:psB,phase_C:psC,par_bloc:scores},
-    reponses:reponses
-  };
+  
+  var payload = {
+  content: {
+    meta: {
+      source: 'AutoEvaluation - FGBX',
+      date: new Date().toISOString()
+    },
+    entreprise: {
+      nom: co.n,
+      secteur: co.sa,
+      taille: co.sz,
+      email: co.e,
+      telephone: co.p
+    },
+    scores: {
+      global: globalScore,
+      phase_A: psA,
+      phase_B: psB,
+      phase_C: psC,
+      par_bloc: scores
+    },
+    reponses: reponses
+  }
+};
+
+  
   btn.disabled=true;
   btn.innerHTML='<span class="spinner"></span>Envoi en cours...';
   fetch(WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
